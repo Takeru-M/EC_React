@@ -45,4 +45,9 @@ class Product extends Model
   {
     return $this->hasMany(Review::class);
   }
+
+  public function favorites(): HasMany
+  {
+    return $this->hasMany(Favorite::class);
+  }
 }

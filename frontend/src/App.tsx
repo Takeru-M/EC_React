@@ -2,7 +2,7 @@
 // import reactLogo from './assets/react.svg'
 // import viteLogo from '/vite.svg'
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Provider } from 'react-redux';
+import { Provider, useSelector } from 'react-redux';
 import store from './redux';
 import Login from './views/Login';
 import Home from './views/Home';
@@ -12,23 +12,29 @@ import Header from './components/Header/Header';
 import './App.css';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import type { AppDispatch } from './redux';
+import type { AppDispatch, RootState } from './redux';
 import { fetchUser } from './redux/users/userSlice';
+import { fetchCarts } from './redux/carts/cartSlice';
 
 function App() {
 
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
-    const userId = localStorage.getItem('user_id');
+    // const userId = localStorage.getItem('user_id');
+    const userId = 1;
     if (userId) {
       dispatch(fetchUser({id: Number(userId)}));
     }
   }, [dispatch]);
 
+  const user_id = useSelector((state: RootState) => state.user.user?.id);
+
   useEffect(() => {
-    // バックエンドからカートの中身の個数を取得してストアに入れる
-  }, []);
+    if (user_id) {
+      dispatch(fetchCarts({user_id: user_id}));
+    }
+  }, [user_id, dispatch]);
 
   return (
     <>

@@ -18,4 +18,9 @@ class ErrorMessages
     {
         return "{$attribute} は {$min} 文字以上で入力してください。";
     }
-}
+
+    public static function notFound($attribute)
+    {
+        return "{$attribute} が見つかりません。";
+    }
+  }

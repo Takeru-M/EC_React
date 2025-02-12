@@ -21,6 +21,9 @@ import {
   Menu as MenuIcon,
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import type { AppDispatch, RootState } from '../../redux';
+import { fetchCarts } from '../../redux/carts/cartSlice';
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -64,10 +67,11 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 const Header = () => {
 
   const { t } = useTranslation();
-
   const navigate = useNavigate();
-
+  // const dispatch = useDispatch<AppDispatch>();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const numOfCart = useSelector((state: RootState) => state.cart.carts.length);
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -185,7 +189,7 @@ const Header = () => {
             component={Link}
             to="/cart"
           >
-            <Badge badgeContent={4} color="error">
+            <Badge badgeContent={numOfCart} color="error">
               <ShoppingCart />
             </Badge>
           </IconButton>

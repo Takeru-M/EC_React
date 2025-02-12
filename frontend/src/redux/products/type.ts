@@ -5,13 +5,16 @@ export interface Product {
   name: string;
   price: number;
   description: string;
-  category: number;
   image: string;
   stock: number;
   rating: {
     rate: number;
     count: number;
   };
+  categories: {
+    id: number;
+    name: string;
+  }[];
 }
 
 export interface Products {

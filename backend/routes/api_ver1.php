@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\ProductController;
+use App\Http\Controllers\Api\V1\CartController;
+use App\Http\Controllers\Api\V1\FavoriteController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -28,6 +31,18 @@ use App\Http\Controllers\Api\V1\ProductController;
 
 Route::resources([
   '/product' => ProductController::class,
+]);
+
+Route::resources([
+  '/cart' => CartController::class,
+]);
+
+Route::resources([
+  '/favorite' => FavoriteController::class,
+]);
+
+Route::resources([
+  '/user' => UserController::class,
 ]);
 
 Route::middleware(['auth:sanctum', 'auth_check:user'])->group(function () {});

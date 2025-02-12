@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-// import { fetchProducts } from '../store/modules/product';
-import axios from 'axios';
 import {
   Container,
   Grid,
@@ -17,12 +15,17 @@ import {
   InputLabel,
   Link as MuiLink,
 } from '@mui/material';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import { Link, useParams } from 'react-router-dom';
 import { ShoppingCart, Package, TruckIcon } from 'lucide-react';
 import Pagination from '../types/responses/Pagination';
+import { Favorite } from '../redux/favorites/type';
 import { fetchProduct } from '../redux/products/productSlice';
 import { AppDispatch } from '../redux';
-
+import type { RootState } from '../redux';
+import { DEFAULT_OPTION_OF_ITEM_TO_BUY } from '../constants/product';
+import { addToCart } from '../redux/carts/cartSlice';
+import { addToFavorite } from '../redux/favorites/favoriteSlice';
 // Mock data for demonstration
 const PRODUCT = {
   id: 1,
@@ -54,158 +57,200 @@ const ProductDetail = () => {
   const { id } = useParams();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(PRODUCT.image);
+  const user_id = useSelector((state: RootState) => state.user.user?.id);
+  const product = useSelector((state: RootState) => state.product.product);
+  const carts = useSelector((state: RootState) => state.cart.carts);
+  const favorites = useSelector((state: RootState) => state.favorite.favorites);
+  const stockOfProduct = Array.from({length: product?.stock ?? 0}, (_, i) => i + 1);
 
   const dispatch = useDispatch<AppDispatch>();
-
-  // const handleQuantityChange = (event: any) => {
-  //   setQuantity(event.target.value);
-  // };
-
-  // const dispatch = useDispatch();
-  // const { products, isLoading } = useSelector((state) => state.products);
-
-  // useEffect(() => {
-  //   dispatch(fetchProducts());
-  // }, [dispatch]);
 
   useEffect(() => {
     dispatch(fetchProduct({id: Number(id)}));
   }, [id]);
 
+  const addCart = async () => {
+    if (product && user_id) {
+      await dispatch(addToCart({user_id: user_id, product_id: product.id, quantity: quantity}));
+    }
+    // カートの中身をモーダルで表示（非同期処理）
+  };
+
+  const addFavorite = async () => {
+    if (product && user_id) {
+      await dispatch(addToFavorite({user_id: user_id, product_id: product.id}));
+    }
+    // お気に入りの中身をモーダルで表示
+  };
+
+  const removeFavorite = async () => {
+    if (product && user_id) {
+      await dispatch(removeFromFavorite({user_id: user_id, product_id: product.id}));
+    }
+  };
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-
-      <Grid container spacing={4}>
-        {/* Left Column - Images */}
-        <Grid item xs={12} md={3}>
-          <Paper elevation={0} sx={{ p: 2 }}>
-            <Box sx={{ mb: 2 }}>
-              <img
-                src={selectedImage}
-                alt={PRODUCT.title}
-                style={{
-                  width: '100%',
-                  height: 'auto',
-                  maxHeight: '500px',
-                  objectFit: 'contain'
-                }}
-              />
-            </Box>
-            <Grid container spacing={1}>
-              {PRODUCT.additionalImages?.map((image, index) => (
-                <Grid item xs={3} key={index}>
-                  <Box
-                    component="img"
-                    src={image}
-                    alt={`${PRODUCT.title} view ${index + 1}`}
-                    sx={{
+    <>
+      {product ? (
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Grid container spacing={4}>
+            {/* Left Column - Images */}
+            <Grid item xs={12} md={3}>
+              <Paper elevation={0} sx={{ p: 2 }}>
+                <Box sx={{ mb: 2 }}>
+                  <img
+                    src={selectedImage}
+                    alt={product.name}
+                    style={{
                       width: '100%',
-                      height: '80px',
-                      objectFit: 'cover',
-                      cursor: 'pointer',
-                      border: selectedImage === image ? '2px solid #1976d2' : '2px solid transparent',
+                      height: 'auto',
+                      maxHeight: '500px',
+                      objectFit: 'contain'
                     }}
-                    onClick={() => setSelectedImage(image)}
                   />
+                </Box>
+                {/* imageを複数登録できるようにする */}
+                <Grid container spacing={1}>
+                  {PRODUCT.additionalImages?.map((image, index) => (
+                    <Grid item xs={3} key={index}>
+                      <Box
+                        component="img"
+                        src={image}
+                        alt={`${product.name} view ${index + 1}`}
+                        sx={{
+                          width: '100%',
+                          height: '80px',
+                          objectFit: 'cover',
+                          cursor: 'pointer',
+                          border: selectedImage === image ? '2px solid #1976d2' : '2px solid transparent',
+                        }}
+                        onClick={() => setSelectedImage(image)}
+                      />
+                    </Grid>
+                  ))}
                 </Grid>
-              ))}
+              </Paper>
             </Grid>
-          </Paper>
-        </Grid>
 
-        {/* Middle Column - Product Details */}
-        <Grid item xs={12} md={6}>
-          <Box>
-            <Typography variant="h4" component="h1" gutterBottom>
-              {PRODUCT.title}
-            </Typography>
-            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-              by {PRODUCT.brand}
-            </Typography>
+            {/* Middle Column - Product Details */}
+            <Grid item xs={12} md={6}>
+              <Box>
+                <Typography variant="h4" component="h1" gutterBottom>
+                  {product.name}
+                </Typography>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Rating value={PRODUCT.rating.rate} precision={0.5} readOnly />
-              <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                {PRODUCT.rating.count} ratings
-              </Typography>
-            </Box>
-
-            <Divider sx={{ my: 2 }} />
-
-            <Box sx={{ my: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                About this item
-              </Typography>
-              <Typography variant="body1" paragraph>
-                {PRODUCT.description}
-              </Typography>
-              <ul>
-                {PRODUCT.features?.map((feature, index) => (
-                  <Typography component="li" key={index} sx={{ mb: 1 }}>
-                    {feature}
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Rating value={product.rating.rate} precision={0.5} readOnly />
+                  <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                    {product.rating.count} ratings
                   </Typography>
-                ))}
-              </ul>
-            </Box>
-          </Box>
-        </Grid>
+                </Box>
 
-        {/* Right Column - Buy Box */}
-        <Grid item xs={12} md={3}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h4" color="primary" gutterBottom>
-              ${PRODUCT.price.toFixed(2)}
-            </Typography>
+                <Divider sx={{ my: 2 }} />
 
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Package size={20} />
-              <Typography variant="body1" color="success.main" sx={{ ml: 1 }}>
-                {PRODUCT.stockStatus}
-              </Typography>
-            </Box>
+                <Box sx={{ my: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    About this item
+                  </Typography>
+                  <Typography variant="body1" paragraph>
+                    {product.description}
+                  </Typography>
+                  {/* <ul>
+                    {PRODUCT.features?.map((feature, index) => (
+                      <Typography component="li" key={index} sx={{ mb: 1 }}>
+                        {feature}
+                      </Typography>
+                    ))}
+                  </ul> */}
+                </Box>
+              </Box>
+            </Grid>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <TruckIcon size={20} />
-              <Typography variant="body2" sx={{ ml: 1 }}>
-                Free Delivery
-              </Typography>
-            </Box>
+            {/* Right Column - Buy Box */}
+            <Grid item xs={12} md={3}>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="h4" color="primary" gutterBottom>
+                  ${product.price}
+                </Typography>
 
-            <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Qty</InputLabel>
-              <Select
-                value={quantity}
-                label="Qty"
-                // onChange={handleQuantityChange}
-              >
-                {[1, 2, 3, 4, 5].map((num) => (
-                  <MenuItem key={num} value={num}>
-                    {num}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Package size={20} />
+                  <Typography variant="body1" color="success.main" sx={{ ml: 1 }}>
+                    {product.stock ? "In Stock" : "残り" + product.stock + "点"}
+                  </Typography>
+                </Box>
 
-            <Button
-              variant="contained"
-              fullWidth
-              sx={{ mb: 1 }}
-              startIcon={<ShoppingCart />}
-            >
-              Add to Cart
-            </Button>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <TruckIcon size={20} />
+                  <Typography variant="body2" sx={{ ml: 1 }}>
+                    Free Delivery
+                  </Typography>
+                </Box>
 
-            <Button
-              variant="contained"
-              color="warning"
-              fullWidth
-            >
-              Buy Now
-            </Button>
-          </Paper>
-        </Grid>
-      </Grid>
-    </Container>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel>Qty</InputLabel>
+                  <Select
+                    value={quantity}
+                    label="Qty"
+                    // onChange={handleQuantityChange}
+                  >
+                    {product.stock > DEFAULT_OPTION_OF_ITEM_TO_BUY.length ? (
+                      DEFAULT_OPTION_OF_ITEM_TO_BUY.map((num: number) => (
+                        <MenuItem key={num} value={num}>
+                          {num}
+                        </MenuItem>
+                      ))
+                    ) : (
+                      stockOfProduct.map((num: number) => (
+                        <MenuItem key={num} value={num}>
+                          {num}
+                        </MenuItem>
+                      ))
+                    )}
+                  </Select>
+                </FormControl>
+
+                {favorites.some((favorite: Favorite) => favorite.product_id === product.id) ? (
+                    <Button
+                    variant="contained"
+                    color="warning"
+                    fullWidth
+                    sx={{ mb: 1 }}
+                    startIcon={<FavoriteIcon />}
+                    onClick={() => addFavorite()}
+                  >
+                    <FavoriteIcon />
+                    Add to Favorite
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    color="warning"
+                    fullWidth
+                    sx={{ mb: 1 }}
+                    startIcon={<FavoriteIcon sx={{ color: 'red' }} />}
+                    onClick={() => removeFavorite()}
+                  >
+                    Remove from Favorite
+                  </Button>
+                )}
+
+                <Button
+                  variant="contained"
+                  fullWidth
+                  startIcon={<ShoppingCart />}
+                  onClick={() => addCart()}
+                >
+                  Add to Cart
+                </Button>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Container>
+      ) : (
+        <div>Product not found</div>
+      )}
+    </>
   );
 };
 
