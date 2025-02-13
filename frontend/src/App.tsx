@@ -7,7 +7,8 @@ import store from './redux';
 import Login from './views/Login';
 import Home from './views/Home';
 import Product from './views/Product';
-// import Cart from './views/Cart'
+import Favorite from './views/Favorite';
+import Cart from './views/Cart'
 import Header from './components/Header/Header';
 import './App.css';
 import { useEffect } from 'react';
@@ -45,7 +46,9 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/product/:id" element={<Product />} />
           <Route path="/users/:action" element={<Login />} />
-          {/* <Route path="/cart/:id" element={<Cart />} /> */}
+          {/* <Route path="/account" element={<Account />} /> */}
+          <Route path="/favorite" element={<Favorite />} />
+          <Route path="/cart/:id" element={<Cart />} />
           </Routes>
         </BrowserRouter>
       </Provider>

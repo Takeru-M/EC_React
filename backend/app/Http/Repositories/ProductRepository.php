@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Repositories;
 
 use App\Models\Product;
+use App\Constants\Constant;
 
 class ProductRepository
 {
@@ -18,7 +19,8 @@ class ProductRepository
       return Product::with('category')
           ->where('exist', true)
           ->orderBy('created_at', 'desc')
-          ->paginate(10);
+          ->take(Constant::DEFAULT_PAGE_SIZE)
+          ->get();
   }
 
   public function create($params)
@@ -45,5 +47,15 @@ class ProductRepository
     $data = Product::where('id', $id)->first();
     $data->delete();
     return $data;
+  }
+
+  public function getPagination($params)
+  {
+    // tmp
+    return Product::where('exist', true)
+        ->orderBy('created_at', 'desc')
+        ->take($params['per_page'])
+        ->skip($params['current_page'])
+        ->get();
   }
 }

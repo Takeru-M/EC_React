@@ -59,7 +59,7 @@ class ProductController extends Controller
         return response()->json(['error' => ErrorMessages::notFound('Product')], 404);
       }
 
-      return response()->json($data, 200);
+      return response()->json(['data' => $data], 200);
   }
 
   /**
@@ -84,5 +84,13 @@ class ProductController extends Controller
   public function destroy(string $id)
   {
     //
+  }
+
+  public function getPagination(Request $request)
+  {
+    $params = $request->all();
+    $data = $this->productService->getPagination($params);
+
+    return response()->json(['data' => $data, 'total' => $data['total'], 'per_page' => $data['per_page'], 'current_page' => $data['current_page']], 200);
   }
 }

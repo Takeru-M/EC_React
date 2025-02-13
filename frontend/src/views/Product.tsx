@@ -14,8 +14,15 @@ import {
   FormControl,
   InputLabel,
   Link as MuiLink,
+  Avatar,
+  TextField,
+  Collapse,
+  IconButton,
+  Alert,
 } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
 import { Link, useParams } from 'react-router-dom';
 import { ShoppingCart, Package, TruckIcon } from 'lucide-react';
 import Pagination from '../types/responses/Pagination';
@@ -25,7 +32,9 @@ import { AppDispatch } from '../redux';
 import type { RootState } from '../redux';
 import { DEFAULT_OPTION_OF_ITEM_TO_BUY } from '../constants/product';
 import { addToCart } from '../redux/carts/cartSlice';
-import { addToFavorite } from '../redux/favorites/favoriteSlice';
+import { addToFavorite, removeFromFavorite, fetchFavorites, setIsLoading } from '../redux/favorites/favoriteSlice';
+import { getReviewsWithUserNames, createReview } from '../redux/reviews/reviewSlice';
+
 // Mock data for demonstration
 const PRODUCT = {
   id: 1,
@@ -57,21 +66,32 @@ const ProductDetail = () => {
   const { id } = useParams();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(PRODUCT.image);
-  const user_id = useSelector((state: RootState) => state.user.user?.id);
+  // const user_id = useSelector((state: RootState) => state.user.user?.id);
   const product = useSelector((state: RootState) => state.product.product);
   const carts = useSelector((state: RootState) => state.cart.carts);
   const favorites = useSelector((state: RootState) => state.favorite.favorites);
   const stockOfProduct = Array.from({length: product?.stock ?? 0}, (_, i) => i + 1);
-
+  const reviews = useSelector((state: RootState) => state.review.reviews_for_display);
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
     dispatch(fetchProduct({id: Number(id)}));
   }, [id]);
 
+  useEffect(() => {
+    if (user_id) {
+      dispatch(fetchFavorites({user_id: user_id}));
+      dispatch(setIsLoading(false));
+    }
+  }, []);
+
+  useEffect(() => {
+    dispatch(getReviewsWithUserNames({product_id: Number(id)}));
+  }, [id]);
+
   const addCart = async () => {
     if (product && user_id) {
-      await dispatch(addToCart({user_id: user_id, product_id: product.id, quantity: quantity}));
+      await dispatch(addToCart({user_id: 1, product_id: product.id, quantity: quantity}));
     }
     // カートの中身をモーダルで表示（非同期処理）
   };
@@ -80,12 +100,34 @@ const ProductDetail = () => {
     if (product && user_id) {
       await dispatch(addToFavorite({user_id: user_id, product_id: product.id}));
     }
+    dispatch(setIsLoading(true));
     // お気に入りの中身をモーダルで表示
   };
 
   const removeFavorite = async () => {
     if (product && user_id) {
       await dispatch(removeFromFavorite({user_id: user_id, product_id: product.id}));
+    }
+  };
+
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [newReview, setNewReview] = useState({
+    rating: 0,
+    comment: '',
+  });
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const user_id = 1;
+  const onSubmitReview = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (user_id) {
+      await dispatch(createReview({user_id: user_id, product_id: Number(id), rating: newReview.rating, comment: newReview.comment}));
+
+      setShowSuccess(true);
+      setShowReviewForm(false);
+      setNewReview({ rating: 0, comment: '' });
+
+      dispatch(getReviewsWithUserNames({ product_id: Number(id) }));
     }
   };
 
@@ -211,28 +253,27 @@ const ProductDetail = () => {
                 </FormControl>
 
                 {favorites.some((favorite: Favorite) => favorite.product_id === product.id) ? (
-                    <Button
-                    variant="contained"
-                    color="warning"
-                    fullWidth
-                    sx={{ mb: 1 }}
-                    startIcon={<FavoriteIcon />}
-                    onClick={() => addFavorite()}
-                  >
-                    <FavoriteIcon />
-                    Add to Favorite
-                  </Button>
+                  <Button
+                  variant="contained"
+                  color="warning"
+                  fullWidth
+                  sx={{ mb: 1 }}
+                  startIcon={<FavoriteIcon sx={{ color: 'red' }} />}
+                  onClick={() => removeFavorite()}
+                >
+                  Remove from Favorite
+                </Button>
                 ) : (
                   <Button
-                    variant="contained"
-                    color="warning"
-                    fullWidth
-                    sx={{ mb: 1 }}
-                    startIcon={<FavoriteIcon sx={{ color: 'red' }} />}
-                    onClick={() => removeFavorite()}
-                  >
-                    Remove from Favorite
-                  </Button>
+                  variant="contained"
+                  color="warning"
+                  fullWidth
+                  sx={{ mb: 1 }}
+                  startIcon={<FavoriteIcon />}
+                  onClick={() => addFavorite()}
+                >
+                  Add to Favorite
+                </Button>
                 )}
 
                 <Button
@@ -245,6 +286,128 @@ const ProductDetail = () => {
                 </Button>
               </Paper>
             </Grid>
+          </Grid>
+
+          {/* Reviews Section */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3, mt: 4 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h5">
+                  Customer Reviews
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<EditIcon />}
+                  onClick={() => setShowReviewForm(!showReviewForm)}
+                >
+                  Write a Review
+                </Button>
+              </Box>
+
+              {/* <Typography variant="h5" gutterBottom>
+                Customer Reviews
+              </Typography> */}
+              <Box sx={{ mb: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Rating value={product.rating.rate} precision={0.5} readOnly size="large" />
+                  <Typography variant="h6" sx={{ ml: 2 }}>
+                    {product.rating.rate} out of 5
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  Based on {product.rating.count} reviews
+                </Typography>
+              </Box>
+
+              {/* Success Alert */}
+              <Collapse in={showSuccess}>
+                <Alert
+                  severity="success"
+                  action={
+                    <IconButton
+                      aria-label="close"
+                      color="inherit"
+                      size="small"
+                      onClick={() => setShowSuccess(false)}
+                    >
+                      <CloseIcon fontSize="inherit" />
+                    </IconButton>
+                  }
+                  sx={{ mb: 2 }}
+                >
+                  Your review has been submitted successfully!
+                </Alert>
+              </Collapse>
+
+              {/* Review Form */}
+              <Collapse in={showReviewForm}>
+                <Paper elevation={0} sx={{ p: 3, mb: 3, bgcolor: 'grey.50' }}>
+                  <form onSubmit={onSubmitReview}>
+                    <Typography variant="h6" gutterBottom>
+                      Your Review
+                    </Typography>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography component="legend">Rating</Typography>
+                      <Rating
+                        value={newReview.rating}
+                        onChange={(_, value) => setNewReview({ ...newReview, rating: value || 0 })}
+                        size="large"
+                      />
+                    </Box>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={4}
+                      label="Write your review"
+                      value={newReview.comment}
+                      onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                      sx={{ mb: 2 }}
+                    />
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        disabled={!newReview.rating || !newReview.comment}
+                      >
+                        Submit Review
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        onClick={() => setShowReviewForm(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </Box>
+                  </form>
+                </Paper>
+              </Collapse>
+
+              <Divider sx={{ mb: 4 }} />
+
+              {reviews.map((review) => (
+                <Box key={review.id} sx={{ mb: 4 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Avatar sx={{ mr: 2 }} />
+                    <Box>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                        {review.user_login_name}
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Rating value={review.rating} readOnly size="small" />
+                        <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                          {new Date(review.created_at).toLocaleDateString()}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+                  <Typography variant="body1">
+                    {review.comment}
+                  </Typography>
+                  <Divider sx={{ mt: 2 }} />
+                </Box>
+              ))}
+            </Paper>
           </Grid>
         </Container>
       ) : (

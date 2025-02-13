@@ -12,7 +12,7 @@ import {
 import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '../redux';
-import { doRegister, doLogin } from '../redux/users/userSlice';
+import { createUser, doLogin } from '../redux/users/userSlice';
 const Login = () => {
   const { t } = useTranslation();
 
@@ -29,7 +29,7 @@ const Login = () => {
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (action === 'register') {
-      await dispatch(doRegister({name, email, password}));
+      await dispatch(createUser({name, email, password}));
       if (accessToken && user?.id) {
         navigate('/');
       } else {

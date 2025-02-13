@@ -3,20 +3,17 @@ import { API_URL, DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "../../constants/consta
 import axios from 'axios';
 import { ProductState, Product } from "./type";
 import Pagination from "../../types/responses/Pagination";
-import { ApiResponse } from "../../types/responses/Api";
+import { ApiResponse, ApiPaginationResponse } from "../../types/responses/Api";
 
 const initialState: ProductState = {
-  products: {
-    data: [],
-    // total: 0,
-    // per_page: DEFAULT_PAGE_SIZE,
-    // current_page: DEFAULT_PAGE,
-  },
+  products: [],
   product: null,
+  current_page: DEFAULT_PAGE,
+  per_page: DEFAULT_PAGE_SIZE,
 };
 
-export const fetchProducts = createAsyncThunk<ApiResponse<Pagination<Product>>, {page: number, page_size: number}>('product/fetchProducts', async ({page, page_size}) => {
-  const response = await axios.get<ApiResponse<Pagination<Product>>>(`${API_URL}/product`, {params: {page, page_size}});
+export const fetchProducts = createAsyncThunk<ApiPaginationResponse<Product>, {page: number, page_size: number}>('product/fetchProducts', async ({page, page_size}) => {
+  const response = await axios.get<ApiPaginationResponse<Product>>(`${API_URL}/product`, {params: {page, page_size}});
   return response.data;
 });
 
@@ -56,7 +53,7 @@ const productSlice = createSlice({
       })
       .addCase(registerProduct.fulfilled, (state, action) => {
         if (action.payload.data) {
-          state.products.data.push(action.payload.data);
+          state.products.push(action.payload.data);
         }
       });
   }

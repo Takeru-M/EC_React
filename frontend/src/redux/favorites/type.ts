@@ -7,4 +7,5 @@ export interface Favorite {
 export interface FavoriteState {
   favorites: Favorite[];
   favorite: Favorite | null;
+  isLoading: boolean;
 }

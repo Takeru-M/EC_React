@@ -25,13 +25,13 @@ class CartService
     return $this->cartRepo->create($params);
   }
 
-  public function getDetailUser($id)
-  {
-    return $this->cartRepo->getDetailCart($id);
-  }
-
   public function delete($params)
   {
     return $this->cartRepo->delete($params);
+  }
+
+  public function getCarts($user_id)
+  {
+    return $this->cartRepo->getCarts($user_id);
   }
 }

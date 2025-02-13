@@ -76,4 +76,11 @@ class FavoriteController extends Controller
 
         return response()->json(['data' => $data], 200);
     }
+
+    public function delete(Request $request)
+    {
+        $params = $request->all();
+        $data = $this->favoriteService->delete($params);
+        return response()->json(['data' => $data], 200);
+    }
 }

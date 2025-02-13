@@ -72,6 +72,8 @@ const Header = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const numOfCart = useSelector((state: RootState) => state.cart.carts.length);
+  // const user_id = useSelector((state: RootState) => state.user.user?.id);
+  const user_id = 1;
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -85,12 +87,12 @@ const Header = () => {
     navigate('/account');
   }
 
-  const gotoOrders = () => {
-    navigate('/orders');
+  const gotoFavorite = () => {
+    navigate('/favorite');
   }
 
   const Logout = () => {
-    navigate('/logout');
+    
   }
 
   const Register = () => {
@@ -171,7 +173,7 @@ const Header = () => {
             {login ? (
               <>
                 <MenuItem onClick={gotoAccount}>{t('header.account.account')}</MenuItem>
-                <MenuItem onClick={gotoOrders}>{t('header.account.orders')}</MenuItem>
+                <MenuItem onClick={gotoFavorite}>{t('header.account.favorites')}</MenuItem>
                 <MenuItem onClick={Logout}>{t('header.account.logout')}</MenuItem>
               </>
             ) : (
@@ -187,7 +189,7 @@ const Header = () => {
             aria-label="show cart items"
             color="inherit"
             component={Link}
-            to="/cart"
+            to={`/cart/${user_id}`}
           >
             <Badge badgeContent={numOfCart} color="error">
               <ShoppingCart />

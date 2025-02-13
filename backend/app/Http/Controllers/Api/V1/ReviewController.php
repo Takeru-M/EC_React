@@ -4,15 +4,16 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Http\Services\CartService;
+use App\Http\Services\ReviewService;
+use App\Models\Review;
 
-class CartController extends Controller
+class ReviewController extends Controller
 {
-    private $cartService;
+    private $reviewService;
 
-    public function __construct(CartService $cartService)
+    public function __construct(ReviewService $reviewService)
     {
-        $this->cartService = $cartService;
+        $this->reviewService = $reviewService;
     }
 
   /**
@@ -20,10 +21,7 @@ class CartController extends Controller
      */
     public function index(Request $request)
     {
-        $user_id = $request->user_id;
-        $data = $this->cartService->getList($user_id);
-
-        return response()->json(['data' => $data], 200);
+      //
     }
 
     /**
@@ -39,10 +37,9 @@ class CartController extends Controller
      */
     public function store(Request $request)
     {
-        $params = $request->all();
-        $data = $this->cartService->create($params);
-
-        return response()->json(['data' => $data], 201);
+      $params = $request->all();
+      $data = $this->reviewService->create($params);
+      return response()->json(['data' => $data], 200);
     }
 
     /**
@@ -74,16 +71,20 @@ class CartController extends Controller
      */
     public function destroy($params)
     {
-        $data = $this->cartService->delete($params);
-
-        return response()->json(['data' => $data], 200);
+      //
     }
 
-    public function getCarts(Request $request)
+    public function getList(Request $request)
     {
-        $user_id = $request->input('user_id');
-        $data = $this->cartService->getCarts($user_id);
+      $product_id = $request->input('product_id');
+      $data = $this->reviewService->getList($product_id);
+      return response()->json(['data' => $data], 200);
+    }
 
-        return response()->json(['data' => $data], 200);
+    public function getReviewsWithUserNames(Request $request)
+    {
+      $product_id = $request->input('product_id');
+      $data = $this->reviewService->getReviewsWithUserNames($product_id);
+      return response()->json(['data' => $data], 200);
     }
 }

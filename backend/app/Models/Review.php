@@ -2,26 +2,19 @@
 
 namespace App\Models;
 
-use DateTimeInterface;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
-use Spatie\Permission\Traits\HasRoles;
 
-class Review extends Authenticatable
+class Review extends Model
 {
-  use HasApiTokens, HasFactory, Notifiable, HasRoles;
-
-  protected $table = 'reviews';
+  use HasFactory;
 
   protected $fillable = [
     'user_id',
     'product_id',
     'rating',
     'comment',
-    'deleted_at'
   ];
 
   protected $hidden = [

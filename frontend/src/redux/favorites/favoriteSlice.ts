@@ -4,10 +4,10 @@ import axios from "axios";
 // import type { AxiosError } from "axios";
 import { API_URL } from "../../constants/constants";
 import { ApiResponse } from "../../types/responses/Api";
-
 const initialState: FavoriteState = {
   favorites: [],
   favorite: null,
+  isLoading: false,
 };
 
 export const fetchFavorites = createAsyncThunk<ApiResponse<Favorite[]>,{ user_id: number }>(
@@ -24,14 +24,18 @@ export const addToFavorite = createAsyncThunk<ApiResponse<Favorite>, {user_id: n
 });
 
 export const removeFromFavorite = createAsyncThunk<ApiResponse<Favorite>, {user_id: number, product_id: number}>('favorite/removeFromFavorite', async (favoriteData) => {
-    const response = await axios.delete<ApiResponse<Favorite>>(`${API_URL}/favorite/`, {params: favoriteData});
+    const response = await axios.delete<ApiResponse<Favorite>>(`${API_URL}/favorite/delete`, {params: favoriteData});
     return response.data;
 });
 
 const favoriteSlice = createSlice({
   name: "favorite",
   initialState,
-  reducers: {},
+  reducers: {
+    setIsLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchFavorites.fulfilled, (state, action) => {
@@ -54,4 +58,5 @@ const favoriteSlice = createSlice({
 });
 
 // export const { setFavorite } = favoriteSlice.actions;
+export const { setIsLoading } = favoriteSlice.actions;
 export default favoriteSlice.reducer;

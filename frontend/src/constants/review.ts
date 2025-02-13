@@ -1,0 +1,5 @@
+const DEFAULT_REVIEW_PAGE_SIZE = 5;
+
+export {
+  DEFAULT_REVIEW_PAGE_SIZE,
+};

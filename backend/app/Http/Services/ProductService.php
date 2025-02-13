@@ -121,4 +121,15 @@ class ProductService
   {
       return $this->productRepo->delete($id);
   }
+
+  public function getPagination($params)
+  {
+    $data = $this->productRepo->getPagination($params);
+    return [
+      'data' => $data,
+      'total' => $data->count(),
+      'per_page' => $params['per_page'],
+      'current_page' => $params['current_page']
+    ];
+  }
 }

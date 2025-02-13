@@ -32,14 +32,36 @@ class CartRepository
   //     ->first();
   // }
 
-  public function delete($params)
+  public function delete($cart_id)
   {
-    $data = Cart::where('user_id', $params['user_id'])
-      ->where('product_id', $params['product_id'])
+    $data = Cart::where('id', $cart_id)
       ->first();
 
     $data->delete();
 
     return $data;
+  }
+
+  public function getCarts($user_id)
+  {
+    return Cart::where('user_id', $user_id)
+      ->with('product')
+      ->get()
+      ->map(function ($item) {
+        return [
+          'id' => $item->id,
+          'quantity' => $item->quantity,
+          'created_at' => $item->created_at,
+          'updated_at' => $item->updated_at,
+          'product' => [
+            'id' => $item->product->id,
+            'name' => $item->product->name,
+            'price' => $item->product->price,
+            'stock' => $item->product->stock,
+            'image' => $item->product->image,
+          ],
+          'total_price' => $item->product->price * $item->quantity
+        ];
+      });
   }
 }

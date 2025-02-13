@@ -18,12 +18,14 @@ export interface Product {
 }
 
 export interface Products {
-  products: Pagination<Product>;
+  products: Product[];
 }
 
 export interface ProductState {
-  products: Pagination<Product>;
+  products: Product[];
   product: Product | null;
+  current_page: number;
+  per_page: number;
 };
 
 export type Action = {
