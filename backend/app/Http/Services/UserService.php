@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Services;
+namespace App\Http\Services;
 
-use App\Repositories\UserRepository;
+use App\Http\Repositories\UserRepository;
 
 class UserService
 {
@@ -27,7 +27,18 @@ class UserService
 
   public function getDetailUser($id)
   {
-    return $this->userRepo->getDetailUser($id);
+    $data = $this->userRepo->getDetailUser($id);
+    return [
+      'id' => $data->id,
+      'first_name' => $data->first_name,
+      'last_name' => $data->last_name,
+      'first_name_kana' => $data->first_name_kana,
+      'last_name_kana' => $data->last_name_kana,
+      'email' => $data->email,
+      'phone_number' => $data->phone_number,
+      'postal_code' => $data->postal_code,
+      'address' => $data->address,
+    ];
   }
 
   public function update($params, $id)

@@ -1,22 +1,23 @@
 export interface User {
   id: number;
-  name: string;
+  first_name: string;
+  last_name: string;
+  first_name_kana: string;
+  last_name_kana: string;
   email: string;
+  phone_number: string;
+  postal_code: string;
+  address: string;
 };
 
 export interface UserState {
   user: User | null;
   accessToken: string | null;
-  loading: boolean;
 };
 
-export interface loginResponse {
-  user: User | null;
+export interface UserResponse {
+  data: User | null;
   access_token: string | null;
-};
-
-export interface fetchUserResponse {
-  user: User | null;
 };
 
 export type Action = {

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Services\ProductService;
 use App\Models\Product;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\ErrorMessages;
 
 class ProductController extends Controller
 {
@@ -14,7 +15,7 @@ class ProductController extends Controller
 
   public function __construct(ProductService $productService)
   {
-    $this->productService = $productService;
+      $this->productService = $productService;
   }
 
   /**
@@ -22,23 +23,13 @@ class ProductController extends Controller
    */
   public function index()
   {
-    // $data = $this->productService->getList();
-    // return response()->json(['data' => $data], 200);
-    try {
-      $products = Product::with(['category_item.category'])
-        ->where('exist', true)
-        ->orderBy('created_at', 'desc')
-        ->get();
+      $data = $this->productService->getList();
 
-      return response()->json([
-        'data' => $products
-      ], 200);
-    } catch (\Exception $e) {
-      Log::error('Product index error: ' . $e->getMessage());
-      return response()->json([
-        'error' => 'Failed to fetch products'
-      ], 500);
-    }
+      if (!$data) {
+        return response()->json(['error' => ErrorMessages::notFound('Product')], 404);
+      }
+
+      return response()->json(['data' => $data], 200);
   }
 
   /**
@@ -62,7 +53,13 @@ class ProductController extends Controller
    */
   public function show(string $id)
   {
-    //
+      $data = $this->productService->getDetailProduct($id);
+
+      if (!$data) {
+        return response()->json(['error' => ErrorMessages::notFound('Product')], 404);
+      }
+
+      return response()->json(['data' => $data], 200);
   }
 
   /**
@@ -87,5 +84,13 @@ class ProductController extends Controller
   public function destroy(string $id)
   {
     //
+  }
+
+  public function getPagination(Request $request)
+  {
+    $params = $request->all();
+    $data = $this->productService->getPagination($params);
+
+    return response()->json(['data' => $data, 'total' => $data['total'], 'per_page' => $data['per_page'], 'current_page' => $data['current_page']], 200);
   }
 }

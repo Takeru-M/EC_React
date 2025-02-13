@@ -23,9 +23,16 @@ class User extends Authenticatable
    * @var list<string>
    */
   protected $fillable = [
-    'name',
+    'login_name',
+    'first_name',
+    'last_name',
+    'first_name_kana',
+    'last_name_kana',
     'email',
-    'password',
+    'phone_number',
+    'postal_code',
+    'address',
+    'exist',
   ];
 
   /**
@@ -69,6 +76,11 @@ class User extends Authenticatable
   public function reviews(): HasMany
   {
     return $this->hasMany(Review::class);
+  }
+
+  public function favorites(): HasMany
+  {
+    return $this->hasMany(Favorite::class);
   }
 
   // public function createToken(string $name, array $abilities = ['*'], ?DateTimeInterface $expiresAt = null)

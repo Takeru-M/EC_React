@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\ProductController;
+use App\Http\Controllers\Api\V1\CartController;
+use App\Http\Controllers\Api\V1\FavoriteController;
+use App\Http\Controllers\Api\V1\ReviewController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -28,6 +31,29 @@ use App\Http\Controllers\Api\V1\ProductController;
 
 Route::resources([
   '/product' => ProductController::class,
+]);
+
+Route::get('/cart/get_carts', [CartController::class, 'getCarts']);
+
+Route::resources([
+  '/cart' => CartController::class,
+]);
+
+Route::delete('/favorite/delete', [FavoriteController::class, 'delete']);
+
+Route::resources([
+  '/favorite' => FavoriteController::class,
+]);
+
+Route::resources([
+  '/user' => UserController::class,
+]);
+
+Route::get('/review/get_list', [ReviewController::class, 'getList']);
+Route::get('/review/get_reviews_with_user_names', [ReviewController::class, 'getReviewsWithUserNames']);
+
+Route::resources([
+  '/review' => ReviewController::class,
 ]);
 
 Route::middleware(['auth:sanctum', 'auth_check:user'])->group(function () {});

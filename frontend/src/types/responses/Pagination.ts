@@ -1,21 +1,14 @@
 export default interface Pagination<T> {
   data: T[];
-  // from?: number | null;
-  // to?: number | null;
-  // total: number;
-  // per_page: number;
-  // current_page: number;
-  // first_page_url?: string | null;
-  // last_page?: number | null;
-  // last_page_url?: string | null;
-  // next_page_url?: string | null;
-  // path?: string | null;
-  // prev_page_url?: string | null;
+  from?: number | null;
+  to?: number | null;
+  total: number;
+  per_page: number;
+  current_page: number;
+  first_page_url?: string | null;
+  last_page?: number | null;
+  last_page_url?: string | null;
+  next_page_url?: string | null;
+  path?: string | null;
+  prev_page_url?: string | null;
 }
-
-export const PaginationInit = {
-  data: [],
-  total: 0,
-  per_page: 0,
-  current_page: 1,
-};

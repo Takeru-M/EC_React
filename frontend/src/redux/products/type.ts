@@ -5,22 +5,27 @@ export interface Product {
   name: string;
   price: number;
   description: string;
-  category: number;
   image: string;
   stock: number;
   rating: {
     rate: number;
     count: number;
   };
+  categories: {
+    id: number;
+    name: string;
+  }[];
 }
 
 export interface Products {
-  products: Pagination<Product>;
+  products: Product[];
 }
 
 export interface ProductState {
-  products: Pagination<Product>;
+  products: Product[];
   product: Product | null;
+  current_page: number;
+  per_page: number;
 };
 
 export type Action = {

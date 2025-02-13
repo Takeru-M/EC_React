@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-// import { fetchProducts } from '../store/modules/product';
-import axios from 'axios';
 import {
   Container,
   Grid,
@@ -16,12 +14,26 @@ import {
   FormControl,
   InputLabel,
   Link as MuiLink,
+  Avatar,
+  TextField,
+  Collapse,
+  IconButton,
+  Alert,
 } from '@mui/material';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
 import { Link, useParams } from 'react-router-dom';
 import { ShoppingCart, Package, TruckIcon } from 'lucide-react';
 import Pagination from '../types/responses/Pagination';
+import { Favorite } from '../redux/favorites/type';
 import { fetchProduct } from '../redux/products/productSlice';
 import { AppDispatch } from '../redux';
+import type { RootState } from '../redux';
+import { DEFAULT_OPTION_OF_ITEM_TO_BUY } from '../constants/product';
+import { addToCart } from '../redux/carts/cartSlice';
+import { addToFavorite, removeFromFavorite, fetchFavorites, setIsLoading } from '../redux/favorites/favoriteSlice';
+import { getReviewsWithUserNames, createReview } from '../redux/reviews/reviewSlice';
 
 // Mock data for demonstration
 const PRODUCT = {
@@ -54,158 +66,354 @@ const ProductDetail = () => {
   const { id } = useParams();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(PRODUCT.image);
-
+  // const user_id = useSelector((state: RootState) => state.user.user?.id);
+  const product = useSelector((state: RootState) => state.product.product);
+  const carts = useSelector((state: RootState) => state.cart.carts);
+  const favorites = useSelector((state: RootState) => state.favorite.favorites);
+  const stockOfProduct = Array.from({length: product?.stock ?? 0}, (_, i) => i + 1);
+  const reviews = useSelector((state: RootState) => state.review.reviews_for_display);
   const dispatch = useDispatch<AppDispatch>();
-
-  // const handleQuantityChange = (event: any) => {
-  //   setQuantity(event.target.value);
-  // };
-
-  // const dispatch = useDispatch();
-  // const { products, isLoading } = useSelector((state) => state.products);
-
-  // useEffect(() => {
-  //   dispatch(fetchProducts());
-  // }, [dispatch]);
 
   useEffect(() => {
     dispatch(fetchProduct({id: Number(id)}));
   }, [id]);
 
+  useEffect(() => {
+    if (user_id) {
+      dispatch(fetchFavorites({user_id: user_id}));
+      dispatch(setIsLoading(false));
+    }
+  }, []);
+
+  useEffect(() => {
+    dispatch(getReviewsWithUserNames({product_id: Number(id)}));
+  }, [id]);
+
+  const addCart = async () => {
+    if (product && user_id) {
+      await dispatch(addToCart({user_id: 1, product_id: product.id, quantity: quantity}));
+    }
+    // カートの中身をモーダルで表示（非同期処理）
+  };
+
+  const addFavorite = async () => {
+    if (product && user_id) {
+      await dispatch(addToFavorite({user_id: user_id, product_id: product.id}));
+    }
+    dispatch(setIsLoading(true));
+    // お気に入りの中身をモーダルで表示
+  };
+
+  const removeFavorite = async () => {
+    if (product && user_id) {
+      await dispatch(removeFromFavorite({user_id: user_id, product_id: product.id}));
+    }
+  };
+
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [newReview, setNewReview] = useState({
+    rating: 0,
+    comment: '',
+  });
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const user_id = 1;
+  const onSubmitReview = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (user_id) {
+      await dispatch(createReview({user_id: user_id, product_id: Number(id), rating: newReview.rating, comment: newReview.comment}));
+
+      setShowSuccess(true);
+      setShowReviewForm(false);
+      setNewReview({ rating: 0, comment: '' });
+
+      dispatch(getReviewsWithUserNames({ product_id: Number(id) }));
+    }
+  };
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-
-      <Grid container spacing={4}>
-        {/* Left Column - Images */}
-        <Grid item xs={12} md={3}>
-          <Paper elevation={0} sx={{ p: 2 }}>
-            <Box sx={{ mb: 2 }}>
-              <img
-                src={selectedImage}
-                alt={PRODUCT.title}
-                style={{
-                  width: '100%',
-                  height: 'auto',
-                  maxHeight: '500px',
-                  objectFit: 'contain'
-                }}
-              />
-            </Box>
-            <Grid container spacing={1}>
-              {PRODUCT.additionalImages?.map((image, index) => (
-                <Grid item xs={3} key={index}>
-                  <Box
-                    component="img"
-                    src={image}
-                    alt={`${PRODUCT.title} view ${index + 1}`}
-                    sx={{
+    <>
+      {product ? (
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Grid container spacing={4}>
+            {/* Left Column - Images */}
+            <Grid item xs={12} md={3}>
+              <Paper elevation={0} sx={{ p: 2 }}>
+                <Box sx={{ mb: 2 }}>
+                  <img
+                    src={selectedImage}
+                    alt={product.name}
+                    style={{
                       width: '100%',
-                      height: '80px',
-                      objectFit: 'cover',
-                      cursor: 'pointer',
-                      border: selectedImage === image ? '2px solid #1976d2' : '2px solid transparent',
+                      height: 'auto',
+                      maxHeight: '500px',
+                      objectFit: 'contain'
                     }}
-                    onClick={() => setSelectedImage(image)}
                   />
+                </Box>
+                {/* imageを複数登録できるようにする */}
+                <Grid container spacing={1}>
+                  {PRODUCT.additionalImages?.map((image, index) => (
+                    <Grid item xs={3} key={index}>
+                      <Box
+                        component="img"
+                        src={image}
+                        alt={`${product.name} view ${index + 1}`}
+                        sx={{
+                          width: '100%',
+                          height: '80px',
+                          objectFit: 'cover',
+                          cursor: 'pointer',
+                          border: selectedImage === image ? '2px solid #1976d2' : '2px solid transparent',
+                        }}
+                        onClick={() => setSelectedImage(image)}
+                      />
+                    </Grid>
+                  ))}
                 </Grid>
-              ))}
+              </Paper>
             </Grid>
-          </Paper>
-        </Grid>
 
-        {/* Middle Column - Product Details */}
-        <Grid item xs={12} md={6}>
-          <Box>
-            <Typography variant="h4" component="h1" gutterBottom>
-              {PRODUCT.title}
-            </Typography>
-            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-              by {PRODUCT.brand}
-            </Typography>
+            {/* Middle Column - Product Details */}
+            <Grid item xs={12} md={6}>
+              <Box>
+                <Typography variant="h4" component="h1" gutterBottom>
+                  {product.name}
+                </Typography>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Rating value={PRODUCT.rating.rate} precision={0.5} readOnly />
-              <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                {PRODUCT.rating.count} ratings
-              </Typography>
-            </Box>
-
-            <Divider sx={{ my: 2 }} />
-
-            <Box sx={{ my: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                About this item
-              </Typography>
-              <Typography variant="body1" paragraph>
-                {PRODUCT.description}
-              </Typography>
-              <ul>
-                {PRODUCT.features?.map((feature, index) => (
-                  <Typography component="li" key={index} sx={{ mb: 1 }}>
-                    {feature}
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Rating value={product.rating.rate} precision={0.5} readOnly />
+                  <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                    {product.rating.count} ratings
                   </Typography>
-                ))}
-              </ul>
-            </Box>
-          </Box>
-        </Grid>
+                </Box>
 
-        {/* Right Column - Buy Box */}
-        <Grid item xs={12} md={3}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h4" color="primary" gutterBottom>
-              ${PRODUCT.price.toFixed(2)}
-            </Typography>
+                <Divider sx={{ my: 2 }} />
 
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Package size={20} />
-              <Typography variant="body1" color="success.main" sx={{ ml: 1 }}>
-                {PRODUCT.stockStatus}
-              </Typography>
-            </Box>
+                <Box sx={{ my: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    About this item
+                  </Typography>
+                  <Typography variant="body1" paragraph>
+                    {product.description}
+                  </Typography>
+                  {/* <ul>
+                    {PRODUCT.features?.map((feature, index) => (
+                      <Typography component="li" key={index} sx={{ mb: 1 }}>
+                        {feature}
+                      </Typography>
+                    ))}
+                  </ul> */}
+                </Box>
+              </Box>
+            </Grid>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <TruckIcon size={20} />
-              <Typography variant="body2" sx={{ ml: 1 }}>
-                Free Delivery
-              </Typography>
-            </Box>
+            {/* Right Column - Buy Box */}
+            <Grid item xs={12} md={3}>
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="h4" color="primary" gutterBottom>
+                  ${product.price}
+                </Typography>
 
-            <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Qty</InputLabel>
-              <Select
-                value={quantity}
-                label="Qty"
-                // onChange={handleQuantityChange}
-              >
-                {[1, 2, 3, 4, 5].map((num) => (
-                  <MenuItem key={num} value={num}>
-                    {num}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Package size={20} />
+                  <Typography variant="body1" color="success.main" sx={{ ml: 1 }}>
+                    {product.stock ? "In Stock" : "残り" + product.stock + "点"}
+                  </Typography>
+                </Box>
 
-            <Button
-              variant="contained"
-              fullWidth
-              sx={{ mb: 1 }}
-              startIcon={<ShoppingCart />}
-            >
-              Add to Cart
-            </Button>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <TruckIcon size={20} />
+                  <Typography variant="body2" sx={{ ml: 1 }}>
+                    Free Delivery
+                  </Typography>
+                </Box>
 
-            <Button
-              variant="contained"
-              color="warning"
-              fullWidth
-            >
-              Buy Now
-            </Button>
-          </Paper>
-        </Grid>
-      </Grid>
-    </Container>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel>Qty</InputLabel>
+                  <Select
+                    value={quantity}
+                    label="Qty"
+                    // onChange={handleQuantityChange}
+                  >
+                    {product.stock > DEFAULT_OPTION_OF_ITEM_TO_BUY.length ? (
+                      DEFAULT_OPTION_OF_ITEM_TO_BUY.map((num: number) => (
+                        <MenuItem key={num} value={num}>
+                          {num}
+                        </MenuItem>
+                      ))
+                    ) : (
+                      stockOfProduct.map((num: number) => (
+                        <MenuItem key={num} value={num}>
+                          {num}
+                        </MenuItem>
+                      ))
+                    )}
+                  </Select>
+                </FormControl>
+
+                {favorites.some((favorite: Favorite) => favorite.product_id === product.id) ? (
+                  <Button
+                  variant="contained"
+                  color="warning"
+                  fullWidth
+                  sx={{ mb: 1 }}
+                  startIcon={<FavoriteIcon sx={{ color: 'red' }} />}
+                  onClick={() => removeFavorite()}
+                >
+                  Remove from Favorite
+                </Button>
+                ) : (
+                  <Button
+                  variant="contained"
+                  color="warning"
+                  fullWidth
+                  sx={{ mb: 1 }}
+                  startIcon={<FavoriteIcon />}
+                  onClick={() => addFavorite()}
+                >
+                  Add to Favorite
+                </Button>
+                )}
+
+                <Button
+                  variant="contained"
+                  fullWidth
+                  startIcon={<ShoppingCart />}
+                  onClick={() => addCart()}
+                >
+                  Add to Cart
+                </Button>
+              </Paper>
+            </Grid>
+          </Grid>
+
+          {/* Reviews Section */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3, mt: 4 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h5">
+                  Customer Reviews
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<EditIcon />}
+                  onClick={() => setShowReviewForm(!showReviewForm)}
+                >
+                  Write a Review
+                </Button>
+              </Box>
+
+              {/* <Typography variant="h5" gutterBottom>
+                Customer Reviews
+              </Typography> */}
+              <Box sx={{ mb: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Rating value={product.rating.rate} precision={0.5} readOnly size="large" />
+                  <Typography variant="h6" sx={{ ml: 2 }}>
+                    {product.rating.rate} out of 5
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  Based on {product.rating.count} reviews
+                </Typography>
+              </Box>
+
+              {/* Success Alert */}
+              <Collapse in={showSuccess}>
+                <Alert
+                  severity="success"
+                  action={
+                    <IconButton
+                      aria-label="close"
+                      color="inherit"
+                      size="small"
+                      onClick={() => setShowSuccess(false)}
+                    >
+                      <CloseIcon fontSize="inherit" />
+                    </IconButton>
+                  }
+                  sx={{ mb: 2 }}
+                >
+                  Your review has been submitted successfully!
+                </Alert>
+              </Collapse>
+
+              {/* Review Form */}
+              <Collapse in={showReviewForm}>
+                <Paper elevation={0} sx={{ p: 3, mb: 3, bgcolor: 'grey.50' }}>
+                  <form onSubmit={onSubmitReview}>
+                    <Typography variant="h6" gutterBottom>
+                      Your Review
+                    </Typography>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography component="legend">Rating</Typography>
+                      <Rating
+                        value={newReview.rating}
+                        onChange={(_, value) => setNewReview({ ...newReview, rating: value || 0 })}
+                        size="large"
+                      />
+                    </Box>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={4}
+                      label="Write your review"
+                      value={newReview.comment}
+                      onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                      sx={{ mb: 2 }}
+                    />
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        disabled={!newReview.rating || !newReview.comment}
+                      >
+                        Submit Review
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        onClick={() => setShowReviewForm(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </Box>
+                  </form>
+                </Paper>
+              </Collapse>
+
+              <Divider sx={{ mb: 4 }} />
+
+              {reviews.map((review) => (
+                <Box key={review.id} sx={{ mb: 4 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Avatar sx={{ mr: 2 }} />
+                    <Box>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                        {review.user_login_name}
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Rating value={review.rating} readOnly size="small" />
+                        <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                          {new Date(review.created_at).toLocaleDateString()}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+                  <Typography variant="body1">
+                    {review.comment}
+                  </Typography>
+                  <Divider sx={{ mt: 2 }} />
+                </Box>
+              ))}
+            </Paper>
+          </Grid>
+        </Container>
+      ) : (
+        <div>Product not found</div>
+      )}
+    </>
   );
 };
 

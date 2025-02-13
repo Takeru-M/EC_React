@@ -9,13 +9,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Cart extends Model
 {
     protected $fillable = [
-        'count'
+        'user_id',
+        'product_id',
+        'quantity',
     ];
 
     protected $hidden = [
         'id',
-        'user_id',
-        'product_id',
     ];
 
     public function users(): BelongsTo
@@ -23,8 +23,8 @@ class Cart extends Model
       return $this->belongsTo(User::class);
     }
 
-    public function category_item(): HasMany
+    public function product(): BelongsTo
     {
-      return $this->hasMany(CategoryItem::class);
+      return $this->belongsTo(Product::class, 'product_id', 'id');
     }
 }

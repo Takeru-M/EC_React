@@ -2,42 +2,87 @@
 
 declare(strict_types=1);
 
-namespace App\Repositories;
+namespace App\Http\Repositories;
 
-use App\Models\Product;
+use App\Models\Review;
+use App\Constants\Constant;
 
 class ReviewRepository
 {
-  public function getAllProducts()
+  public function getAllReviews()
   {
-    return Product::all();
+    return Review::all();
   }
 
-  public function getList()
+  public function getList($product_id)
   {
-    return Product::with('category')
-      ->where('exist', true)
+    return Review::where('product_id', $product_id)
       ->orderBy('created_at', 'desc')
-      ->paginate(10);
+      ->take(Constant::DEFAULT_REVIEW_PAGE_SIZE)
+      ->get();
   }
 
   public function create($params)
   {
-    return Product::create($params);
+    return Review::create($params);
   }
 
-  public function getDetailProduct($id)
+  public function getDetailReview($id)
   {
-    return Product::where('id', $id)->first();
+    return Review::where('id', $id)->first();
   }
 
   public function update($params, $id)
   {
-    return Product::where('id', $id)->update($params);
+    return Review::where('id', $id)->update($params);
   }
 
   public function delete($id)
   {
-    return Product::where('id', $id)->delete();
+    return Review::where('id', $id)->delete();
+  }
+
+  public function getAllList($product_id)
+  {
+    return Review::where('product_id', $product_id)
+      ->orderBy('created_at', 'desc')
+      ->get();
+  }
+
+  public function getReviewsWithUserNames($product_id)
+  {
+      return Review::select(
+          'reviews.id',
+          'reviews.user_id',
+          'reviews.product_id',
+          'reviews.rating',
+          'reviews.comment',
+          'reviews.created_at',
+          'reviews.updated_at',
+          'users.login_name as user_login_name'
+      )
+      ->join('users', 'reviews.user_id', '=', 'users.id')
+      ->where('reviews.product_id', $product_id)
+      ->orderBy('reviews.created_at', 'desc')
+      ->take(Constant::DEFAULT_REVIEW_PAGE_SIZE)
+      ->get();
+  }
+
+  public function getAllReviewsWithUserNames($product_id)
+  {
+      return Review::select(
+          'reviews.id',
+          'reviews.user_id',
+          'reviews.product_id',
+          'reviews.rating',
+          'reviews.comment',
+          'reviews.created_at',
+          'reviews.updated_at',
+          'users.login_name as user_login_name'
+      )
+      ->join('users', 'reviews.user_id', '=', 'users.id')
+      ->where('reviews.product_id', $product_id)
+      ->orderBy('reviews.created_at', 'desc')
+      ->get();
   }
 }
