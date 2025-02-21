@@ -69,18 +69,17 @@ class FavoriteController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request)
+    public function destroy($favorite_id)
     {
-        $params = $request->all();
-        $data = $this->favoriteService->delete($params);
+        $data = $this->favoriteService->delete($favorite_id);
 
         return response()->json(['data' => $data], 200);
     }
 
-    public function delete(Request $request)
+    public function getList(Request $request)
     {
-        $params = $request->all();
-        $data = $this->favoriteService->delete($params);
+        $params = $request->only('user_id');
+        $data = $this->favoriteService->getList($params);
         return response()->json(['data' => $data], 200);
     }
 }

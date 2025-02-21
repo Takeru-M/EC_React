@@ -35,11 +35,4 @@ class Staff extends Authenticatable
     'password',
     'profile_id'
   ];
-
-  public function createToken(string $name, $profile, array $abilities = ['*'], ?DateTimeInterface $expiresAt = null)
-  {
-    $token = parent::createToken($name);
-    $token->token->abilities = ['staff'];
-    return $token;
-  }
 }

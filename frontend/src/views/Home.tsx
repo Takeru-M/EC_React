@@ -10,6 +10,7 @@ import { fetchProducts } from '../redux/products/productSlice';
 import type { AppDispatch, RootState } from '../redux';
 import { Product } from '../redux/products/type';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../constants/product';
+import { fetchCarts, getCarts } from '../redux/carts/cartSlice';
 
 const Home = () => {
   const { t } = useTranslation();
@@ -25,22 +26,17 @@ const Home = () => {
     navigate(`/product/${product.id}`);
   }
 
+  const user = useSelector((state: RootState) => state.user.user);
+
   useEffect(() => {
     dispatch(fetchProducts({page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
   }, [dispatch]);
 
-  const loadProducts = async () => {
-    await dispatch(fetchProducts({page: current_page, page_size: per_page}));
-  }
-
-  // useEffect(() => {
-  //   console.log(products);
-  // }, [products]);
-
-  // const handleAddToCart = (product: Product) => {
-  //   console.log('Added to cart:', product);
-  //   // Implement cart functionality
-  // };
+  useEffect(() => {
+    if (user?.id) {
+      dispatch(fetchCarts({user_id: user.id}));
+    }
+  }, [user]);
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>

@@ -32,7 +32,7 @@ class User extends Authenticatable
     'phone_number',
     'postal_code',
     'address',
-    'exist',
+    'password',
   ];
 
   /**
@@ -41,7 +41,6 @@ class User extends Authenticatable
    * @var list<string>
    */
   protected $hidden = [
-    'password',
     'remember_token',
   ];
 
@@ -82,11 +81,4 @@ class User extends Authenticatable
   {
     return $this->hasMany(Favorite::class);
   }
-
-  // public function createToken(string $name, array $abilities = ['*'], ?DateTimeInterface $expiresAt = null)
-  // {
-  //   $token = parent::createToken($name);
-  //   $token->token->abilities = ['user'];
-  //   return $token;
-  // }
 }

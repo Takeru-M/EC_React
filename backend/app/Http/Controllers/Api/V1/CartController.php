@@ -72,9 +72,9 @@ class CartController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($params)
+    public function destroy($cart_id)
     {
-        $data = $this->cartService->delete($params);
+        $data = $this->cartService->delete($cart_id);
 
         return response()->json(['data' => $data], 200);
     }

@@ -23,7 +23,7 @@ import {
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import type { AppDispatch, RootState } from '../../redux';
-import { fetchCarts } from '../../redux/carts/cartSlice';
+import { signout } from '../../redux/users/userSlice';
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -68,12 +68,12 @@ const Header = () => {
 
   const { t } = useTranslation();
   const navigate = useNavigate();
-  // const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useDispatch<AppDispatch>();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const numOfCart = useSelector((state: RootState) => state.cart.carts.length);
-  // const user_id = useSelector((state: RootState) => state.user.user?.id);
-  const user_id = 1;
+  const isSignin = useSelector((state: RootState) => state.user.isSignin);
+  const user = useSelector((state: RootState) => state.user.user);
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -91,18 +91,13 @@ const Header = () => {
     navigate('/favorite');
   }
 
-  const Logout = () => {
-    
+  const Signout = () => {
+    dispatch(signout());
+    navigate('/');
   }
 
-  const Register = () => {
-    navigate('/users/register');
-  }
-
-  const login = false;
-
-  const Login = () => {
-    navigate('/users/login');
+  const Signin = () => {
+    navigate('/signin');
   }
 
   return (
@@ -170,16 +165,15 @@ const Header = () => {
             open={Boolean(anchorEl)}
             onClose={handleClose}
           >
-            {login ? (
+            {isSignin ? (
               <>
                 <MenuItem onClick={gotoAccount}>{t('header.account.account')}</MenuItem>
                 <MenuItem onClick={gotoFavorite}>{t('header.account.favorites')}</MenuItem>
-                <MenuItem onClick={Logout}>{t('header.account.logout')}</MenuItem>
+                <MenuItem onClick={Signout}>{t('header.account.signout')}</MenuItem>
               </>
             ) : (
               <>
-                <MenuItem onClick={Register}>{t('header.account.register')}</MenuItem>
-                <MenuItem onClick={Login}>{t('header.account.login')}</MenuItem>
+                <MenuItem onClick={Signin}>{t('header.account.signin')}</MenuItem>
               </>
             )}
           </Menu>
@@ -189,7 +183,7 @@ const Header = () => {
             aria-label="show cart items"
             color="inherit"
             component={Link}
-            to={`/cart/${user_id}`}
+            to={`/cart/get_carts?user_id=${user?.id}`}
           >
             <Badge badgeContent={numOfCart} color="error">
               <ShoppingCart />

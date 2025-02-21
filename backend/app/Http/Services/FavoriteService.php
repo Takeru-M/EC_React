@@ -30,8 +30,8 @@ class FavoriteService
   //   return $this->favoriteRepo->getDetailFavorite($user_id);
   // }
 
-  public function delete($params)
+  public function delete($favorite_id)
   {
-    return $this->favoriteRepo->delete($params);
+    return $this->favoriteRepo->delete($favorite_id);
   }
 }

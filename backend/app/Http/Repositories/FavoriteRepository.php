@@ -16,8 +16,22 @@ class FavoriteRepository
   public function getList($user_id)
   {
     return Favorite::where('user_id', $user_id)
-      ->orderBy('created_at', 'desc')
-      ->get();
+      ->with('product')
+      ->get()
+      ->map(function ($item) {
+        return [
+          'id' => $item->id,
+          'created_at' => $item->created_at,
+          'updated_at' => $item->updated_at,
+          'product' => [
+            'id' => $item->product->id,
+            'name' => $item->product->name,
+            'price' => $item->product->price,
+            'stock' => $item->product->stock,
+            'image' => $item->product->image,
+          ],
+        ];
+      });
   }
 
   public function create($params)
@@ -32,12 +46,9 @@ class FavoriteRepository
   //     ->first();
   // }fav
 
-  public function delete($params)
+  public function delete($favorite_id)
   {
-    $data = Favorite::where('user_id', $params['user_id'])
-      ->where('product_id', $params['product_id'])
-      ->first();
-
+    $data = Favorite::where('id', $favorite_id)->first();
     $data->delete();
 
     return $data;

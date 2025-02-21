@@ -1,33 +1,42 @@
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
-import { User, UserState, UserResponse } from "./type";
+import { Signout, User, UserState } from "./type";
 import { API_URL } from "../../constants/constants";
 import axios from 'axios';
 import { ApiResponse } from "../../types/responses/Api";
+import { Auth, Signin } from "./type";
+import { api, api_initial } from "../../constants/axios";
 
 const initialState: UserState = {
+  users: [],
   user: null,
-  accessToken: null,
+  isSignin: false,
 };
 
 // tmp パスを変える
-export const doLogin = createAsyncThunk<UserResponse, {email: string, password: string}>('user/login', async ({email, password}) => {
-  const response = await axios.post<UserResponse>(`${API_URL}/user/login`, {email, password});
+export const signup = createAsyncThunk<ApiResponse<User>, {formData: Auth}>('user/signup', async ({formData}) => {
+  await api_initial.get("/sanctum/csrf-cookie");
+  const response = await api.post<ApiResponse<User>>(`/signup`, formData);
   return response.data;
 });
 
-export const doLogout = createAsyncThunk<UserResponse, {id: number}>('user/logout', async ({id}) => {
-  const response = await axios.post<UserResponse>(`${API_URL}/user/logout`, {id});
+export const signin = createAsyncThunk<ApiResponse<User>, {formData: Signin}>('user/signin', async ({formData}) => {
+  await api_initial.get("/sanctum/csrf-cookie");
+  const response = await api.post<ApiResponse<User>>(`/signin`, formData);
   return response.data;
 });
 
-export const fetchUser = createAsyncThunk<ApiResponse<User>, {id: number}>('user/fetchuser', async ({id}) => {
-  const response = await axios.get<ApiResponse<User>>(`${API_URL}/user/${id}`);
+export const signout = createAsyncThunk<void>('user/signout', async () => {
+  const response = await api.post<void>(`/signout`);
   return response.data;
 });
 
-export const createUser = createAsyncThunk<UserResponse, {name: string, email: string, password: string}>('user/register', async ({name, email, password}) => {
-  const response = await axios.post<UserResponse>(`${API_URL}/user`, {name, email, password});
-  return response.data;
+export const fetchUser = createAsyncThunk<ApiResponse<User>>('user/fetchUser', async () => {
+  try {
+    const response = await api.get<ApiResponse<User>>(`/fetch_user`);
+    return response.data;
+  } catch {
+    return null;
+  }
 });
 
 export const userSlice = createSlice({
@@ -43,37 +52,33 @@ export const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(doLogin.fulfilled, (state, action) => {
-        if (action.payload.access_token) {
-          localStorage.setItem('access_token', action.payload.access_token);
-        }
-        return {
-          ...state,
-          user: action.payload.data,
-          accessToken: action.payload.access_token,
+      .addCase(signup.fulfilled, (state, action) => {
+        if (action.payload.data) {
+          state.user = action.payload.data;
+          if (action.payload.data.id) {
+            state.isSignin = true;
+          }
         }
       })
-      .addCase(doLogout.fulfilled, (state) => {
-        localStorage.removeItem('access_token');
-        return {
-          ...state,
-          user: null,
-          accessToken: null,
+      .addCase(signin.fulfilled, (state, action) => {
+        if (action.payload.data) {
+          state.user = action.payload.data;
+          if (action.payload.data.id) {
+            state.isSignin = true;
+          }
         }
+      })
+      .addCase(signout.fulfilled, (state) => {
+        state.user = null;
+        state.isSignin = false;
       })
       .addCase(fetchUser.fulfilled, (state, action) => {
         if (action.payload.data) {
           state.user = action.payload.data;
-        }
-      })
-      .addCase(createUser.fulfilled, (state, action) => {
-        if (action.payload.access_token) {
-          localStorage.setItem('access_token', action.payload.access_token);
-        }
-        return {
-          ...state,
-          user: action.payload.data,
-          accessToken: action.payload.access_token,
+          state.isSignin = true;
+        } else {
+          state.user = null;
+          state.isSignin = false;
         }
       })
   },
