@@ -4,6 +4,7 @@ import axios from "axios";
 import { API_URL } from "../../constants/constants";
 import { ApiResponse } from "../../types/responses/Api";
 import { CartResponse } from "./type";
+import { api } from "../../constants/axios";
 
 const initialState: CartState = {
   carts: [],
@@ -12,23 +13,22 @@ const initialState: CartState = {
 };
 
 export const fetchCarts = createAsyncThunk<ApiResponse<Cart[]>, {user_id: number}>('cart/fetchCarts', async ({user_id}) => {
-  const response = await axios.get<ApiResponse<Cart[]>>(`${API_URL}/cart?user_id=${user_id}`);
+  const response = await api.get<ApiResponse<Cart[]>>(`/cart?user_id=${user_id}`);
   return response.data;
 });
 
 export const getCarts = createAsyncThunk<ApiResponse<CartResponse[]>, {user_id: number}>('cart/getCarts', async ({user_id}) => {
-  const response = await axios.get<ApiResponse<CartResponse[]>>(`${API_URL}/cart/get_carts?user_id=${user_id}`);
-  console.log(response.data);
+  const response = await api.get<ApiResponse<CartResponse[]>>(`/cart/get_carts?user_id=${user_id}`);
   return response.data;
 });
 
 export const addToCart = createAsyncThunk<ApiResponse<Cart>, {user_id: number, product_id: number, quantity: number}>('cart/addToCart', async (cartData) => {
-  const response = await axios.post<ApiResponse<Cart>>(`${API_URL}/cart`, cartData);
+  const response = await api.post<ApiResponse<Cart>>(`/cart`, cartData);
   return response.data;
 });
 
 export const removeFromCart = createAsyncThunk<ApiResponse<Cart>, {cart_id: number}>('cart/removeFromCart', async (cartData) => {
-  const response = await axios.delete<ApiResponse<Cart>>(`${API_URL}/cart/${cartData.cart_id}`);
+  const response = await api.delete<ApiResponse<Cart>>(`/cart/${cartData.cart_id}`);
   return response.data;
 });
 
@@ -54,6 +54,14 @@ const cartSlice = createSlice({
       .addCase(getCarts.fulfilled, (state, action) => {
         if (action.payload.data) {
           state.carts_for_screen = action.payload.data;
+          state.carts = action.payload.data.map((cart: CartResponse) => ({
+            id: cart.id,
+            user_id: 0,
+            product_id: cart.product.id,
+            quantity: cart.quantity,
+            created_at: cart.created_at,
+            updated_at: cart.updated_at,
+          }));
         }
       })
       .addCase(addToCart.fulfilled, (state, action) => {

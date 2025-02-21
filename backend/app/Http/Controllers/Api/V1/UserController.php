@@ -29,7 +29,7 @@ class UserController extends Controller
 
     public function store(UserPostRequest $request)
     {
-        $params = $request->only('name', 'email', 'password');
+        $params = $request->all();
         $data = $this->userService->create($params);
         // ユーザのデータとアクセストークンを返す
         return response()->json(['data' => $data, 'access_token' => $data->createToken('auth_token')->plainTextToken]);
@@ -37,8 +37,7 @@ class UserController extends Controller
 
     public function show($id)
     {
-        $data = $this->userService->getDetailUser($id);
-        return response()->json(['data' => $data], 200);
+        //
     }
 
     public function update(UserPostRequest $request, $id)

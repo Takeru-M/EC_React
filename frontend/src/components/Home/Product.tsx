@@ -7,7 +7,7 @@ import {
   Rating,
   Box,
 } from '@mui/material';
-import { Product } from '../../types/entities/Product';
+import { Product } from '../../redux/products/type';
 
 interface ProductProps {
   product: Product;
@@ -20,12 +20,12 @@ const ProductCard: React.FC<ProductProps> = ({ product }) => {
         component="img"
         height="200"
         image={product.image}
-        alt={product.title}
+        alt={product.name}
         sx={{ objectFit: 'contain', p: 2 }}
       />
       <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         <Typography gutterBottom variant="h6" component="div" noWrap>
-          {product.title}
+          {product.name}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {product.description.length > 100

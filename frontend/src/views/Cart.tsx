@@ -29,23 +29,26 @@ const CartPage = () => {
 
   useEffect(() => {
     if (user_id) {
-      dispatch(getCarts({user_id}));
+      dispatch(getCarts({user_id: user_id}));
     }
-  }, [user_id]);
+  }, []);
 
-  const handleRemoveFromCart = async (cart_id: number) => {
+  const handleRemoveFromCart = (cart_id: number) => {
     if (user_id) {
-      await dispatch(removeFromCart({
+      dispatch(removeFromCart({
         cart_id: cart_id
-      }));
-      await dispatch(getCarts({user_id}));
+      }))
+        .unwrap()
+        .then(() => {
+          dispatch(getCarts({user_id}));
+        });
     }
   };
 
-  const handleQuantityChange = async (cart_id: number, newQuantity: string) => {
+  const handleQuantityChange = (cart_id: number, newQuantity: string) => {
     const quantity = Number(newQuantity);
     if (quantity > 0) {
-      await dispatch(updateCartQuantity({
+      dispatch(updateCartQuantity({
         cart_id: cart_id,
         quantity: quantity
       }));

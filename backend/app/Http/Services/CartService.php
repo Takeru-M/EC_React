@@ -25,9 +25,9 @@ class CartService
     return $this->cartRepo->create($params);
   }
 
-  public function delete($params)
+  public function delete($cart_id)
   {
-    return $this->cartRepo->delete($params);
+    return $this->cartRepo->delete($cart_id);
   }
 
   public function getCarts($user_id)

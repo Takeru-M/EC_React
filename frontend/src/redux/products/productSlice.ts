@@ -2,8 +2,8 @@ import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import { API_URL, DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "../../constants/constants";
 import axios from 'axios';
 import { ProductState, Product } from "./type";
-import Pagination from "../../types/responses/Pagination";
 import { ApiResponse, ApiPaginationResponse } from "../../types/responses/Api";
+import { api } from "../../constants/axios";
 
 const initialState: ProductState = {
   products: [],
@@ -13,18 +13,18 @@ const initialState: ProductState = {
 };
 
 export const fetchProducts = createAsyncThunk<ApiPaginationResponse<Product>, {page: number, page_size: number}>('product/fetchProducts', async ({page, page_size}) => {
-  const response = await axios.get<ApiPaginationResponse<Product>>(`${API_URL}/product`, {params: {page, page_size}});
+  const response = await api.get<ApiPaginationResponse<Product>>(`/product`, {params: {page, page_size}});
   return response.data;
 });
 
 export const fetchProduct = createAsyncThunk<ApiResponse<Product>, {id: number}>('product/fetchProduct', async ({id}) => {
-  const response = await axios.get<ApiResponse<Product>>(`${API_URL}/product/${id}`);
+  const response = await api.get<ApiResponse<Product>>(`/product/${id}`);
   return response.data;
 });
 
 export const registerProduct = createAsyncThunk<ApiResponse<Product>, Partial<Product>>('product/register',
   async (productData) => {
-    const response = await axios.post<ApiResponse<Product>>(`${API_URL}/product`, productData);
+    const response = await api.post<ApiResponse<Product>>(`/product`, productData);
     return response.data;
 });
 

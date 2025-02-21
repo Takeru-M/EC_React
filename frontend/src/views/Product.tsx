@@ -32,7 +32,7 @@ import { AppDispatch } from '../redux';
 import type { RootState } from '../redux';
 import { DEFAULT_OPTION_OF_ITEM_TO_BUY } from '../constants/product';
 import { addToCart } from '../redux/carts/cartSlice';
-import { addToFavorite, removeFromFavorite, fetchFavorites, setIsLoading } from '../redux/favorites/favoriteSlice';
+import { addToFavorite, removeFromFavorite, getFavorites, setIsLoading } from '../redux/favorites/favoriteSlice';
 import { getReviewsWithUserNames, createReview } from '../redux/reviews/reviewSlice';
 
 // Mock data for demonstration
@@ -66,7 +66,7 @@ const ProductDetail = () => {
   const { id } = useParams();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(PRODUCT.image);
-  // const user_id = useSelector((state: RootState) => state.user.user?.id);
+  const user_id = useSelector((state: RootState) => state.user.user?.id);
   const product = useSelector((state: RootState) => state.product.product);
   const carts = useSelector((state: RootState) => state.cart.carts);
   const favorites = useSelector((state: RootState) => state.favorite.favorites);
@@ -80,33 +80,32 @@ const ProductDetail = () => {
 
   useEffect(() => {
     if (user_id) {
-      dispatch(fetchFavorites({user_id: user_id}));
-      dispatch(setIsLoading(false));
+      dispatch(getFavorites({user_id: user_id}));
     }
   }, []);
 
   useEffect(() => {
     dispatch(getReviewsWithUserNames({product_id: Number(id)}));
-  }, [id]);
+  }, []);
 
-  const addCart = async () => {
+  const addCart = () => {
     if (product && user_id) {
-      await dispatch(addToCart({user_id: 1, product_id: product.id, quantity: quantity}));
+      dispatch(addToCart({user_id: 1, product_id: product.id, quantity: quantity}));
     }
     // カートの中身をモーダルで表示（非同期処理）
   };
 
-  const addFavorite = async () => {
+  const addFavorite = () => {
     if (product && user_id) {
-      await dispatch(addToFavorite({user_id: user_id, product_id: product.id}));
+      dispatch(addToFavorite({user_id: user_id, product_id: product.id}));
     }
     dispatch(setIsLoading(true));
     // お気に入りの中身をモーダルで表示
   };
 
-  const removeFavorite = async () => {
+  const removeFavorite = () => {
     if (product && user_id) {
-      await dispatch(removeFromFavorite({user_id: user_id, product_id: product.id}));
+      dispatch(removeFromFavorite({favorite_id: product.id}));
     }
   };
 
@@ -117,7 +116,6 @@ const ProductDetail = () => {
   });
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const user_id = 1;
   const onSubmitReview = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (user_id) {

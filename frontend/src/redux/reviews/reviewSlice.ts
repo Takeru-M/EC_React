@@ -6,6 +6,7 @@ import { ApiPaginationResponse, ApiResponse } from "../../types/responses/Api";
 import { FetchedReviewResponse, ReviewState, Review } from "./type";
 import { DEFAULT_PAGE } from "../../constants/constants";
 import { DEFAULT_REVIEW_PAGE_SIZE } from "../../constants/review";
+import { api } from "../../constants/axios";
 
 const initialState: ReviewState = {
   reviews: [],
@@ -15,17 +16,17 @@ const initialState: ReviewState = {
 };
 
 export const getReviews = createAsyncThunk<ApiPaginationResponse<FetchedReviewResponse>, {product_id: number}>('review/getList', async ({product_id}) => {
-  const response = await axios.get<ApiPaginationResponse<FetchedReviewResponse>>(`${API_URL}/review/get_list`, {params: {product_id}});
+  const response = await api.get<ApiPaginationResponse<FetchedReviewResponse>>(`/review/get_list`, {params: {product_id}});
   return response.data;
 });
 
 export const getReviewsWithUserNames = createAsyncThunk<ApiPaginationResponse<FetchedReviewResponse>, {product_id: number}>('review/getReviewsWithUserNames', async ({product_id}) => {
-  const response = await axios.get<ApiPaginationResponse<FetchedReviewResponse>>(`${API_URL}/review/get_reviews_with_user_names`, {params: {product_id}});
+  const response = await api.get<ApiPaginationResponse<FetchedReviewResponse>>(`/review/get_reviews_with_user_names`, {params: {product_id}});
   return response.data;
 });
 
 export const createReview = createAsyncThunk<ApiResponse<Review>, {user_id: number, product_id: number, rating: number, comment: string}>('review/create', async ({user_id, product_id, rating, comment}) => {
-  const response = await axios.post<ApiResponse<Review>>(`${API_URL}/review`, {user_id, product_id, rating, comment});
+    const response = await api.post<ApiResponse<Review>>(`/review`, {user_id, product_id, rating, comment});
   return response.data;
 });
 
