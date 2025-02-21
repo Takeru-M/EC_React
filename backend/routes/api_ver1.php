@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\V1\ReviewController;
 
 Route::post('/signup', [AuthController::class, 'signup']);
 Route::post('/signin', [AuthController::class, 'signin']);
+Route::post('/signout', [AuthController::class, 'signout']);
 
 Route::resources([
   '/product' => ProductController::class,

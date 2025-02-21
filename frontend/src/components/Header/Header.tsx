@@ -91,13 +91,13 @@ const Header = () => {
     navigate('/favorite');
   }
 
-  const Signout = () => {
-    dispatch(signout());
-    navigate('/');
-  }
-
   const Signin = () => {
     navigate('/signin');
+  }
+
+  const Signout = () => {
+    dispatch(signout());
+    navigate(0);
   }
 
   return (

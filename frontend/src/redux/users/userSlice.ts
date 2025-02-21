@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import { Signout, User, UserState } from "./type";
 import { API_URL } from "../../constants/constants";
-import axios from 'axios';
 import { ApiResponse } from "../../types/responses/Api";
 import { Auth, Signin } from "./type";
 import { api, api_initial } from "../../constants/axios";
@@ -26,18 +25,16 @@ export const signin = createAsyncThunk<ApiResponse<User>, {formData: Signin}>('u
 });
 
 export const signout = createAsyncThunk<void>('user/signout', async () => {
-  const response = await api.post<void>(`/signout`);
-  return response.data;
+  await api.post<void>(`/signout`);
 });
 
-export const fetchUser = createAsyncThunk<ApiResponse<User>>('user/fetchUser', async () => {
-  try {
-    const response = await api.get<ApiResponse<User>>(`/fetch_user`);
+export const fetchUser = createAsyncThunk<ApiResponse<User> | null, void>(
+  'user/fetchUser',
+  async () => {
+    const response = await api.get<ApiResponse<User>>('/fetch_user');
     return response.data;
-  } catch {
-    return null;
   }
-});
+);
 
 export const userSlice = createSlice({
   name: "user",
@@ -73,12 +70,14 @@ export const userSlice = createSlice({
         state.isSignin = false;
       })
       .addCase(fetchUser.fulfilled, (state, action) => {
-        if (action.payload.data) {
-          state.user = action.payload.data;
-          state.isSignin = true;
-        } else {
-          state.user = null;
-          state.isSignin = false;
+        if (action.payload) {
+          if (action.payload.data) {
+            state.user = action.payload.data;
+            state.isSignin = true;
+          } else {
+            state.user = null;
+            state.isSignin = false;
+          }
         }
       })
   },

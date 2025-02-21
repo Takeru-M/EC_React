@@ -17,11 +17,11 @@ import { fetchUser } from './redux/users/userSlice';
 import type { AppDispatch } from './redux';
 
 function App() {
-  const dispatch = useDispatch<AppDispatch>();
+  // const dispatch = useDispatch<AppDispatch>();
 
-  useEffect(() => {
-    dispatch(fetchUser());
-  }, [dispatch]);
+  // useEffect(() => {
+  //   dispatch(fetchUser());
+  // }, [dispatch]);
 
   return (
     <>
@@ -33,11 +33,9 @@ function App() {
           <Route path="signup" element={<Auth />} />
           <Route path="/signin" element={<Auth />} />
           <Route path="/product/:id" element={<Product />} />
-          <Route element={<ProtectedRoute />}>
-            {/* <Route path="/account" element={<Account />} /> */}
-            <Route path="/favorite" element={<Favorite />} />
-            <Route path="/cart/:id" element={<Cart />} />
-          </Route>
+          {/* <Route path="/account" element={<Account />} /> */}
+          <Route path="/favorite" element={<Favorite />} />
+          <Route path="/cart/:id" element={<Cart />} />
           </Routes>
         </BrowserRouter>
       </Provider>
