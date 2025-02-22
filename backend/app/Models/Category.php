@@ -11,10 +11,6 @@ class Category extends Model
       'name'
     ];
 
-    protected $hidden = [
-      'id'
-    ];
-
     public function products(): BelongsTo
     {
       return $this->belongsTo(Product::class);

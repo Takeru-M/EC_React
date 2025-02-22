@@ -14,6 +14,7 @@ const initialState: ProductState = {
 
 export const fetchProducts = createAsyncThunk<ApiPaginationResponse<Product>, {page: number, page_size: number}>('product/fetchProducts', async ({page, page_size}) => {
   const response = await api.get<ApiPaginationResponse<Product>>(`/product`, {params: {page, page_size}});
+  console.log(response.data);
   return response.data;
 });
 
@@ -28,6 +29,12 @@ export const registerProduct = createAsyncThunk<ApiResponse<Product>, Partial<Pr
     return response.data;
 });
 
+export const searchProducts = createAsyncThunk<ApiPaginationResponse<Product>, {searchTerm: string, category_id: number, page: number, page_size: number}>('product/searchProducts', async ({searchTerm, category_id, page, page_size}) => {
+  const response = await api.get<ApiPaginationResponse<Product>>(`/search`, {params: {searchTerm, category_id, page, page_size}});
+  console.log(response.data);
+  return response.data;
+});
+
 const productSlice = createSlice({
   name: "product",
   initialState,
@@ -35,7 +42,7 @@ const productSlice = createSlice({
     setProduct: (state, action: PayloadAction<Product>) => {
       return {
         ...state,
-        user: action.payload,
+        product: action.payload,
       }
     },
   },
@@ -54,6 +61,11 @@ const productSlice = createSlice({
       .addCase(registerProduct.fulfilled, (state, action) => {
         if (action.payload.data) {
           state.products.push(action.payload.data);
+        }
+      })
+      .addCase(searchProducts.fulfilled, (state, action) => {
+        if (action.payload.data) {
+          state.products = action.payload.data;
         }
       });
   }

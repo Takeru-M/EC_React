@@ -14,6 +14,10 @@ class Favorite extends Model
         'product_id'
     ];
 
+    protected $hidden = [
+        'id'
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

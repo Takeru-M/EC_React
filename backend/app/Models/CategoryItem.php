@@ -14,6 +14,10 @@ class CategoryItem extends Model
     'category_id'
   ];
 
+  protected $hidden = [
+    'id'
+  ];
+
   public function product(): BelongsTo
   {
     return $this->belongsTo(Product::class);

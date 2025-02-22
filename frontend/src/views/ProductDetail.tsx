@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import {
   Container,
   Grid,
@@ -63,12 +65,13 @@ const PRODUCT = {
 };
 
 const ProductDetail = () => {
+  const navigate = useNavigate();
+
   const { id } = useParams();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(PRODUCT.image);
   const user_id = useSelector((state: RootState) => state.user.user?.id);
   const product = useSelector((state: RootState) => state.product.product);
-  const carts = useSelector((state: RootState) => state.cart.carts);
   const favorites = useSelector((state: RootState) => state.favorite.favorites);
   const stockOfProduct = Array.from({length: product?.stock ?? 0}, (_, i) => i + 1);
   const reviews = useSelector((state: RootState) => state.review.reviews_for_display);
@@ -91,16 +94,19 @@ const ProductDetail = () => {
   const addCart = () => {
     if (product && user_id) {
       dispatch(addToCart({user_id: 1, product_id: product.id, quantity: quantity}));
+      toast.success('カートに追加しました');
+    } else {
+      
+      toast.success('カートに追加しました');
     }
-    // カートの中身をモーダルで表示（非同期処理）
   };
 
   const addFavorite = () => {
     if (product && user_id) {
       dispatch(addToFavorite({user_id: user_id, product_id: product.id}));
+    } else {
+      navigate('/signin');
     }
-    dispatch(setIsLoading(true));
-    // お気に入りの中身をモーダルで表示
   };
 
   const removeFavorite = () => {

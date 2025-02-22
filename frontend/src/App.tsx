@@ -3,10 +3,13 @@
 // import viteLogo from '/vite.svg'
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Provider, useDispatch } from 'react-redux';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import store from './redux';
 import Auth from './views/Auth';
 import Home from './views/Home';
-import Product from './views/Product';
+import Product from './views/ProductDetail';
+import SearchedProducts from './views/SearchedProducts';
 import Favorite from './views/Favorite';
 import Cart from './views/Cart'
 import Header from './components/Header/Header';
@@ -25,6 +28,7 @@ function App() {
 
   return (
     <>
+      <ToastContainer />
       <Provider store={store}>
         <BrowserRouter>
           <Header />
@@ -33,6 +37,7 @@ function App() {
           <Route path="signup" element={<Auth />} />
           <Route path="/signin" element={<Auth />} />
           <Route path="/product/:id" element={<Product />} />
+          <Route path="/search" element={<SearchedProducts />} />
           {/* <Route path="/account" element={<Account />} /> */}
           <Route path="/favorite" element={<Favorite />} />
           <Route path="/cart/:id" element={<Cart />} />

@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\FavoriteController;
 use App\Http\Controllers\Api\V1\ReviewController;
+use App\Http\Controllers\Api\V1\CategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,6 +26,11 @@ Route::post('/signup', [AuthController::class, 'signup']);
 Route::post('/signin', [AuthController::class, 'signin']);
 Route::post('/signout', [AuthController::class, 'signout']);
 
+Route::resources([
+  '/category' => CategoryController::class,
+]);
+
+Route::get('/search', [ProductController::class, 'searchProducts']);
 Route::resources([
   '/product' => ProductController::class,
 ]);

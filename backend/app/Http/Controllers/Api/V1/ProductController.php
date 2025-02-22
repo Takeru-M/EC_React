@@ -93,4 +93,13 @@ class ProductController extends Controller
 
     return response()->json(['data' => $data, 'total' => $data['total'], 'per_page' => $data['per_page'], 'current_page' => $data['current_page']], 200);
   }
+
+  public function searchProducts(Request $request)
+  {
+    $tmp_data = $this->productService->searchProducts($request);
+    // return response()->json(['data' => $data['data'], 'total' => $data['total'], 'per_page' => $data['per_page'], 'current_page' => $data['current_page']], 200);
+    $response = response()->json($tmp_data);
+    $data = $response->getOriginalContent();
+    return response()->json(['data' => $data], 200);
+  }
 }
