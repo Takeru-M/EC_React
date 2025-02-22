@@ -41,13 +41,18 @@ class UserService
     ];
   }
 
-  public function update($params, $id)
+  public function update($user, $params)
   {
-    return $this->userRepo->update($params, $id);
+    return $this->userRepo->update($user, $params);
   }
 
   public function delete($id)
   {
     return $this->userRepo->delete($id);
+  }
+
+  public function updatePassword($user, $params)
+  {
+    return $this->userRepo->updatePassword($user, $params);
   }
 }

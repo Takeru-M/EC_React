@@ -10,6 +10,7 @@ import Auth from './views/Auth';
 import Home from './views/Home';
 import Product from './views/ProductDetail';
 import SearchedProducts from './views/SearchedProducts';
+import Account from './views/Account';
 import Favorite from './views/Favorite';
 import Cart from './views/Cart'
 import Header from './components/Header/Header';
@@ -38,9 +39,10 @@ function App() {
           <Route path="/signin" element={<Auth />} />
           <Route path="/product/:id" element={<Product />} />
           <Route path="/search" element={<SearchedProducts />} />
-          {/* <Route path="/account" element={<Account />} /> */}
+          <Route path="/account" element={<Account />} />
           <Route path="/favorite" element={<Favorite />} />
-          <Route path="/cart/:id" element={<Cart />} />
+          <Route path="/cart" element={<Cart />} />
+          {/* <Route path="/order_history" element={<OrderHistory />} /> */}
           </Routes>
         </BrowserRouter>
       </Provider>

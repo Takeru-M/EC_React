@@ -270,7 +270,7 @@ const Header = () => {
             aria-label="show cart items"
             color="inherit"
             component={Link}
-            to={`/cart/get_carts?user_id=${user?.id}`}
+            to={'/cart'}
           >
             <Badge badgeContent={numOfCart} color="error">
               <ShoppingCart />

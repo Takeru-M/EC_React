@@ -45,6 +45,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
   Route::get('/cart/get_carts', [CartController::class, 'getCarts']);
 
+  Route::put('/user/password/{user}', [UserController::class, 'updatePassword']);
+
   Route::resources([
     '/user' => UserController::class,
   ]);
