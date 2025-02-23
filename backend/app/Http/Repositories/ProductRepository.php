@@ -15,13 +15,42 @@ class ProductRepository
       return Product::all();
   }
 
-  public function getList()
+  public function getList($params)
   {
-      return Product::with('category')
-          ->where('exist', true)
-          ->orderBy('created_at', 'desc')
-          ->take(Constant::DEFAULT_PAGE_SIZE)
-          ->get();
+      $page = (int) $params['page'];
+      $pageSize = (int) $params['page_size'];
+
+      $query = Product::with([
+        'category_item' => function ($query) {
+          $query->select('id', 'product_id', 'category_id');
+        },
+        'category_item.category' => function ($query) {
+          $query->select('id', 'name');
+        }
+      ])
+        ->select([
+          'products.id',
+          'products.name',
+          'products.description',
+          'products.price',
+          'products.stock',
+          'products.image',
+          DB::raw('(SELECT COALESCE(AVG(reviews.rating), 0) FROM reviews WHERE reviews.product_id = products.id) as rate'),
+          DB::raw('(SELECT COUNT(*) FROM reviews WHERE reviews.product_id = products.id) as review_count')
+        ])
+        ->where('exist', true)
+        ->orderBy('created_at', 'desc');
+
+        $total = $query->count();
+        // $totalPages = ceil($total / $pageSize);
+        $data = $query->skip(($page - 1) * $pageSize)->take($pageSize)->get();
+
+        return [
+            'data' => $data,
+            'total' => $total,
+            'per_page' => $pageSize,
+            'current_page' => $page,
+        ];
   }
 
   public function create($params)
@@ -31,9 +60,27 @@ class ProductRepository
 
   public function getDetailProduct($id)
   {
-      return Product::where('id', $id)
-          ->where('exist', true)
-          ->first();
+      return Product::with([
+        'category_item' => function ($query) {
+          $query->select('id', 'product_id', 'category_id');
+        },
+        'category_item.category' => function ($query) {
+          $query->select('id', 'name');
+        }
+      ])
+        ->select([
+          'products.id',
+          'products.name',
+          'products.description',
+          'products.price',
+          'products.stock',
+          'products.image',
+          DB::raw('(SELECT COALESCE(AVG(reviews.rating), 0) FROM reviews WHERE reviews.product_id = products.id) as rate'),
+          DB::raw('(SELECT COUNT(*) FROM reviews WHERE reviews.product_id = products.id) as review_count')
+        ])
+        ->where('exist', true)
+        ->where('id', $id)
+        ->first();
   }
 
   public function update($params, $id)
@@ -50,99 +97,59 @@ class ProductRepository
     return $data;
   }
 
-  public function getPagination($params)
-  {
-    // tmp
-    return Product::where('exist', true)
-        ->orderBy('created_at', 'desc')
-        ->take($params['per_page'])
-        ->skip($params['current_page'])
-        ->get();
-  }
-
   public function searchProducts($params)
   {
-    // category_itemから条件合致するもののproduct_idを取得
-    // product_idをもとにproductを取得
+      $page = (int) $params['page'];
+      $pageSize = (int) $params['page_size'];
 
-    // TODO: SQLTuning
-    // $query = Product::query();
+      $query = Product::query();
 
-    // if (!empty($params->searchTerm)) {
-    //   $query->where(function ($q) use ($params) {
-    //       $q->where('name', 'LIKE', '%' . $params->searchTerm . '%')
-    //         ->orWhere('description', 'LIKE', '%' . $params->searchTerm . '%');
-    //   });
-    // }
+      // 検索ワードがある場合、name または description に含まれるかをチェック
+      if (!empty($params['searchTerm'])) {
+          $query->where(function ($q) use ($params) {
+              $q->where('name', 'like', '%' . $params['searchTerm'] . '%')
+                ->orWhere('description', 'like', '%' . $params['searchTerm'] . '%');
+          });
+      }
 
-    // if (!empty($params->category_id)) {
-    //   $query->whereHas('categories', function ($q) use ($params) {
-    //       $q->where('categories.id', $params->category_id);
-    //   });
-    // }
+      // カテゴリーIDで商品を絞り込み
+      if (!empty($params['category_id'])) {
+          $query->whereIn('id', function ($subQuery) use ($params) {
+              $subQuery->select('product_id')
+                  ->from('category_item')
+                  ->where('category_id', $params['category_id']);
+          });
+      }
 
-    $query = Product::query();
+      $query->with([
+          'category_item' => function ($query) {
+              $query->select('id', 'product_id', 'category_id');
+          },
+          'category_item.category' => function ($query) {
+              $query->select('id', 'name');
+          }
+      ])
+      ->select([
+          'products.id',
+          'products.name',
+          'products.description',
+          'products.price',
+          'products.stock',
+          'products.image',
+          DB::raw('(SELECT COALESCE(AVG(reviews.rating), 0) FROM reviews WHERE reviews.product_id = products.id) as rate'),
+          DB::raw('(SELECT COUNT(*) FROM reviews WHERE reviews.product_id = products.id) as review_count')
+      ])
+      ->where('exist', true)
+      ->orderBy('created_at', 'desc');
 
-    // 検索ワードがある場合、name または description に含まれるかをチェック
-    if ($params->has('keyword') && !empty($params->keyword)) {
-        $query->where(function ($q) use ($params) {
-            $q->where('name', 'like', '%' . $params->keyword . '%')
-              ->orWhere('description', 'like', '%' . $params->keyword . '%');
-        });
-    }
+      $total = $query->count();
+      $data = $query->skip(($page - 1) * $pageSize)->take($pageSize)->get();
 
-    // カテゴリーIDで商品を絞り込み
-    if ($params->has('category_id') && !empty($params->category_id)) {
-        $query->whereIn('id', function ($subQuery) use ($params) {
-            $subQuery->select('product_id')
-                ->from('category_item')
-                ->where('category_id', $params->category_id);
-        });
-    }
-
-    // 商品情報の取得
-    $products = $query->with([
-        'category_item' => function ($query) {
-            $query->select('id', 'product_id', 'category_id');
-        },
-        'category_item.category' => function ($query) {
-            $query->select('id', 'name');
-        }
-    ])
-    ->select([
-        'products.id',
-        'products.name',
-        'products.description',
-        'products.price',
-        'products.stock',
-        'products.image',
-        DB::raw('(SELECT COALESCE(AVG(reviews.rating), 0) FROM reviews WHERE reviews.product_id = products.id) as rate'),
-        DB::raw('(SELECT COUNT(*) FROM reviews WHERE reviews.product_id = products.id) as review_count')
-    ])
-    ->where('exist', true)
-    ->orderBy('created_at', 'desc')
-    ->get();
-
-    // フォーマットを整形して返す
-    return response()->json($products->map(function ($product) {
-        return [
-            'id' => $product->id,
-            'name' => $product->name,
-            'description' => $product->description,
-            'price' => $product->price,
-            'stock' => $product->stock,
-            'image' => $product->image,
-            'rating' => [
-                'rate' => (float) $product->rate,
-                'count' => (int) $product->review_count
-            ],
-            'categories' => $product->category_item->map(function ($item) {
-                return [
-                    'id' => $item->category->id,
-                    'name' => $item->category->name
-                ];
-            })
-        ];
-    }));
+      return [
+          'data' => $data,
+          'total' => $total,
+          'per_page' => $pageSize,
+          'current_page' => $page,
+      ];
   }
 }

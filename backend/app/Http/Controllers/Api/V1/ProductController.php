@@ -21,15 +21,16 @@ class ProductController extends Controller
   /**
    * Display a listing of the resource.
    */
-  public function index()
+  public function index(Request $request)
   {
-      $data = $this->productService->getList();
+      $params = $request->all();
+      $data = $this->productService->getList($params);
 
       if (!$data) {
         return response()->json(['error' => ErrorMessages::notFound('Product')], 404);
       }
 
-      return response()->json(['data' => $data], 200);
+      return response()->json(['data' => $data['data'], 'total' => $data['total'], 'per_page' => $data['per_page'], 'current_page' => $data['current_page']], 200);
   }
 
   /**
@@ -86,20 +87,10 @@ class ProductController extends Controller
     //
   }
 
-  public function getPagination(Request $request)
-  {
-    $params = $request->all();
-    $data = $this->productService->getPagination($params);
-
-    return response()->json(['data' => $data, 'total' => $data['total'], 'per_page' => $data['per_page'], 'current_page' => $data['current_page']], 200);
-  }
-
   public function searchProducts(Request $request)
   {
-    $tmp_data = $this->productService->searchProducts($request);
-    // return response()->json(['data' => $data['data'], 'total' => $data['total'], 'per_page' => $data['per_page'], 'current_page' => $data['current_page']], 200);
-    $response = response()->json($tmp_data);
-    $data = $response->getOriginalContent();
-    return response()->json(['data' => $data], 200);
+      $params = $request->all();
+      $data = $this->productService->searchProducts($params);
+      return response()->json(['data' => $data['data'], 'total' => $data['total'], 'per_page' => $data['per_page'], 'current_page' => $data['current_page']], 200);
   }
 }

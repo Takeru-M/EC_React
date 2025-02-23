@@ -24,6 +24,7 @@ export interface Products {
 export interface ProductState {
   products: Product[];
   product: Product | null;
+  total: number;
   current_page: number;
   per_page: number;
 };

@@ -12,10 +12,3 @@ export interface ApiPaginationResponse<T> {
   message?: string; // メッセージ（エラー時も含む）
   errors?: Record<string, string[]>; // バリデーションエラー用
 }
-
-// export interface AuthResponse<T> {
-//   data?: T;
-//   access_token?: string;
-//   message?: string;
-//   errors?: Record<string, string[]>;
-// }

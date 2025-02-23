@@ -13,25 +13,25 @@ class FavoriteRepository
     return Favorite::all();
   }
 
-  public function getList($user_id)
+  public function getList($params)
   {
-    return Favorite::where('user_id', $user_id)
-      ->with('product')
-      ->get()
-      ->map(function ($item) {
-        return [
-          'id' => $item->id,
-          'created_at' => $item->created_at,
-          'updated_at' => $item->updated_at,
-          'product' => [
-            'id' => $item->product->id,
-            'name' => $item->product->name,
-            'price' => $item->product->price,
-            'stock' => $item->product->stock,
-            'image' => $item->product->image,
-          ],
-        ];
-      });
+    $page = (int) $params['page'];
+    $pageSize = (int) $params['page_size'];
+
+    $query = Favorite::query();
+
+    $query->where('user_id', $params['user_id'])
+      ->with('product');
+
+    $total = $query->count();
+    $data = $query->skip(($page - 1) * $pageSize)->take($pageSize)->get();
+
+    return [
+      'data' => $data,
+      'total' => $total,
+      'per_page' => $pageSize,
+      'current_page' => $page,
+    ];
   }
 
   public function create($params)

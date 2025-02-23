@@ -2,20 +2,24 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Favorite, FavoriteResponse, FavoriteState } from "./type";
 import axios from "axios";
 // import type { AxiosError } from "axios";
-import { ApiResponse } from "../../types/responses/Api";
+import { ApiPaginationResponse, ApiResponse } from "../../types/responses/Api";
 import { api } from "../../constants/axios";
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "../../constants/constants";
 
 const initialState: FavoriteState = {
   favorites: [],
   favorites_for_screen: [],
   favorite: null,
   isLoading: false,
+  total: 0,
+  per_page: DEFAULT_PAGE_SIZE,
+  current_page: DEFAULT_PAGE,
 };
 
-export const getFavorites = createAsyncThunk<ApiResponse<FavoriteResponse[]>,{ user_id: number }>(
+export const fetchFavorites = createAsyncThunk<ApiPaginationResponse<FavoriteResponse>,{ user_id: number, page: number, page_size: number }>(
   "favorite/getFavorites",
-  async ({ user_id }) => {
-    const response = await api.get<ApiResponse<FavoriteResponse[]>>(`/favorite/get_favorites?user_id=${user_id}`);
+  async ({ user_id, page, page_size }) => {
+    const response = await api.get<ApiPaginationResponse<FavoriteResponse>>(`/favorite/get_favorites`, {params: {user_id, page, page_size}});
     return response.data;
   }
 );
@@ -40,8 +44,8 @@ const favoriteSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(getFavorites.fulfilled, (state, action) => {
-        if (action.payload.data) {
+      .addCase(fetchFavorites.fulfilled, (state, action) => {
+        if (action.payload.data && action.payload.total && action.payload.per_page && action.payload.current_page) {
           state.favorites_for_screen = action.payload.data;
           state.favorites = action.payload.data.map((favorite: FavoriteResponse) => ({
             id: favorite.id,
@@ -50,6 +54,9 @@ const favoriteSlice = createSlice({
             created_at: favorite.created_at,
             updated_at: favorite.updated_at,
           }));
+          state.total = action.payload.total;
+          state.per_page = action.payload.per_page;
+          state.current_page = action.payload.current_page;
         }
       })
       .addCase(addToFavorite.fulfilled, (state, action) => {

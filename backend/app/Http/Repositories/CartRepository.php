@@ -42,26 +42,24 @@ class CartRepository
     return $data;
   }
 
-  public function getCarts($user_id)
+  public function fetchCarts($params)
   {
-    return Cart::where('user_id', $user_id)
-      ->with('product')
-      ->get()
-      ->map(function ($item) {
-        return [
-          'id' => $item->id,
-          'quantity' => $item->quantity,
-          'created_at' => $item->created_at,
-          'updated_at' => $item->updated_at,
-          'product' => [
-            'id' => $item->product->id,
-            'name' => $item->product->name,
-            'price' => $item->product->price,
-            'stock' => $item->product->stock,
-            'image' => $item->product->image,
-          ],
-          'total_price' => $item->product->price * $item->quantity
-        ];
-      });
+    $page = (int) $params['page'];
+    $page_size = (int) $params['page_size'];
+
+    $query = Cart::query();
+
+    $query->where('user_id', $params['user_id'])
+      ->with('product');
+
+    $total = $query->count();
+    $data = $query->skip(($page - 1) * $page_size)->take($page_size)->get();
+
+    return [
+      'data' => $data,
+      'total' => $total,
+      'per_page' => $page_size,
+      'current_page' => $page,
+    ];
   }
 }

@@ -2,23 +2,28 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Cart, CartState } from "./type";
 import axios from "axios";
 import { API_URL } from "../../constants/constants";
-import { ApiResponse } from "../../types/responses/Api";
+import { ApiPaginationResponse, ApiResponse } from "../../types/responses/Api";
 import { CartResponse } from "./type";
 import { api } from "../../constants/axios";
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "../../constants/constants";
 
 const initialState: CartState = {
   carts: [],
   carts_for_screen: [],
   cart: null,
+  total: 0,
+  per_page: DEFAULT_PAGE_SIZE,
+  current_page: DEFAULT_PAGE,
 };
 
-export const fetchCarts = createAsyncThunk<ApiResponse<Cart[]>, {user_id: number}>('cart/fetchCarts', async ({user_id}) => {
-  const response = await api.get<ApiResponse<Cart[]>>(`/cart?user_id=${user_id}`);
-  return response.data;
-});
+// export const getCarts = createAsyncThunk<ApiResponse<Cart[]>, {user_id: number}>('cart/getCarts', async ({user_id}) => {
+//   const response = await api.get<ApiResponse<Cart[]>>(`/cart/${user_id}`);
+//   console.log(response.data);
+//   return response.data;
+// });
 
-export const getCarts = createAsyncThunk<ApiResponse<CartResponse[]>, {user_id: number}>('cart/getCarts', async ({user_id}) => {
-  const response = await api.get<ApiResponse<CartResponse[]>>(`/cart/get_carts?user_id=${user_id}`);
+export const fetchCarts = createAsyncThunk<ApiPaginationResponse<CartResponse>, {user_id: number, page: number, page_size: number}>('cart/fetchCarts', async ({user_id, page, page_size}) => {
+  const response = await api.get<ApiPaginationResponse<CartResponse>>(`/cart/fetch_carts`, {params: {user_id, page, page_size}});
   return response.data;
 });
 
@@ -47,12 +52,7 @@ const cartSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchCarts.fulfilled, (state, action) => {
-        if (action.payload.data) {
-          state.carts = action.payload.data;
-        }
-      })
-      .addCase(getCarts.fulfilled, (state, action) => {
-        if (action.payload.data) {
+        if (action.payload.data && action.payload.total && action.payload.per_page && action.payload.current_page) {
           state.carts_for_screen = action.payload.data;
           state.carts = action.payload.data.map((cart: CartResponse) => ({
             id: cart.id,
@@ -62,6 +62,10 @@ const cartSlice = createSlice({
             created_at: cart.created_at,
             updated_at: cart.updated_at,
           }));
+
+          state.total = action.payload.total;
+          state.per_page = action.payload.per_page;
+          state.current_page = action.payload.current_page;
         }
       })
       .addCase(addToCart.fulfilled, (state, action) => {

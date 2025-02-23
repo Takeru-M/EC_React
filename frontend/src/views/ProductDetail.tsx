@@ -34,8 +34,9 @@ import { AppDispatch } from '../redux';
 import type { RootState } from '../redux';
 import { DEFAULT_OPTION_OF_ITEM_TO_BUY } from '../constants/product';
 import { addToCart } from '../redux/carts/cartSlice';
-import { addToFavorite, removeFromFavorite, getFavorites, setIsLoading } from '../redux/favorites/favoriteSlice';
+import { addToFavorite, removeFromFavorite, fetchFavorites, setIsLoading } from '../redux/favorites/favoriteSlice';
 import { getReviewsWithUserNames, createReview } from '../redux/reviews/reviewSlice';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../constants/constants';
 
 // Mock data for demonstration
 const PRODUCT = {
@@ -83,7 +84,7 @@ const ProductDetail = () => {
 
   useEffect(() => {
     if (user_id) {
-      dispatch(getFavorites({user_id: user_id}));
+      dispatch(fetchFavorites({user_id: user_id, page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
     }
   }, []);
 

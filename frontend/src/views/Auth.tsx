@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import {
   Container,
   Paper,
@@ -44,30 +45,32 @@ const Auth = () => {
     setError('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     if (isSignUp) {
       if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match');
+        toast.error('Passwords do not match');
         return;
       }
 
       try {
         // Here you would typically make an API call to your authentication endpoint
-        dispatch(signup({formData: formData}));
-        // tmp 失敗時はメッセージを表示
+        await dispatch(signup({formData: formData}));
+        toast.success('Sign up successful');
         navigate('/'); // Redirect to home page after successful auth
       } catch (err) {
+        // TODO: エラーメッセージを表示
         setError('Authentication failed. Please try again.');
       }
     } else {
       try {
-        dispatch(signin({formData: formData}));
-        // tmp 失敗時はメッセージを表示
+        await dispatch(signin({formData: formData}));
+        toast.success('Sign in successful');
         navigate('/'); // Redirect to home page after successful auth
       } catch (err) {
+        // TODO: エラーメッセージを表示
         setError('Authentication failed. Please try again.');
       }
     }

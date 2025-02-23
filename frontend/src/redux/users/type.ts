@@ -19,6 +19,18 @@ export interface UserState {
   isSignin: boolean;
 };
 
+export interface UpdateUserState {
+  login_name: string;
+  first_name: string;
+  last_name: string;
+  first_name_kana: string;
+  last_name_kana: string;
+  email: string;
+  phone_number: string;
+  postal_code: string;
+  address: string;
+}
+
 export interface Signin {
   email: string;
   password: string;

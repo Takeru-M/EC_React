@@ -11,6 +11,9 @@ export interface FavoriteState {
   favorites_for_screen: FavoriteResponse[];
   favorite: Favorite | null;
   isLoading: boolean;
+  total: number;
+  per_page: number;
+  current_page: number;
 }
 
 export interface FavoriteResponse {

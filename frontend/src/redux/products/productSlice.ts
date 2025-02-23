@@ -8,13 +8,13 @@ import { api } from "../../constants/axios";
 const initialState: ProductState = {
   products: [],
   product: null,
-  current_page: DEFAULT_PAGE,
+  total: 0,
   per_page: DEFAULT_PAGE_SIZE,
+  current_page: DEFAULT_PAGE,
 };
 
 export const fetchProducts = createAsyncThunk<ApiPaginationResponse<Product>, {page: number, page_size: number}>('product/fetchProducts', async ({page, page_size}) => {
   const response = await api.get<ApiPaginationResponse<Product>>(`/product`, {params: {page, page_size}});
-  console.log(response.data);
   return response.data;
 });
 
@@ -31,7 +31,6 @@ export const registerProduct = createAsyncThunk<ApiResponse<Product>, Partial<Pr
 
 export const searchProducts = createAsyncThunk<ApiPaginationResponse<Product>, {searchTerm: string, category_id: number, page: number, page_size: number}>('product/searchProducts', async ({searchTerm, category_id, page, page_size}) => {
   const response = await api.get<ApiPaginationResponse<Product>>(`/search`, {params: {searchTerm, category_id, page, page_size}});
-  console.log(response.data);
   return response.data;
 });
 
@@ -49,8 +48,11 @@ const productSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchProducts.fulfilled, (state, action) => {
-        if (action.payload.data) {
+        if (action.payload.data && action.payload.total && action.payload.per_page && action.payload.current_page ) {
           state.products = action.payload.data;
+          state.total = action.payload.total;
+          state.per_page = action.payload.per_page;
+          state.current_page = action.payload.current_page;
         }
       })
       .addCase(fetchProduct.fulfilled, (state, action) => {
@@ -64,8 +66,11 @@ const productSlice = createSlice({
         }
       })
       .addCase(searchProducts.fulfilled, (state, action) => {
-        if (action.payload.data) {
+        if (action.payload.data && action.payload.total && action.payload.per_page && action.payload.current_page ) {
           state.products = action.payload.data;
+          state.total = action.payload.total;
+          state.per_page = action.payload.per_page;
+          state.current_page = action.payload.current_page;
         }
       });
   }

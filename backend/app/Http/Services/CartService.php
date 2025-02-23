@@ -30,8 +30,32 @@ class CartService
     return $this->cartRepo->delete($cart_id);
   }
 
-  public function getCarts($user_id)
+  public function fetchCarts($params)
   {
-    return $this->cartRepo->getCarts($user_id);
+    $response = $this->cartRepo->fetchCarts($params);
+    $carts = $response['data'];
+
+    $data['data'] = $carts->map(function ($cart) {
+      return [
+        'id' => $cart->id,
+        'quantity' => $cart->quantity,
+        'created_at' => $cart->created_at,
+        'updated_at' => $cart->updated_at,
+        'product' => [
+          'id' => $cart->product->id,
+          'name' => $cart->product->name,
+          'price' => $cart->product->price,
+          'stock' => $cart->product->stock,
+          'image' => $cart->product->image,
+        ],
+        'total_price' => $cart->product->price * $cart->quantity
+      ];
+    });
+
+    $data['total'] = $response['total'];
+    $data['per_page'] = $response['per_page'];
+    $data['current_page'] = $response['current_page'];
+
+    return $data;
   }
 }
