@@ -9,13 +9,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Cart extends Model
 {
     protected $fillable = [
+        'id',
         'user_id',
         'product_id',
         'quantity',
-    ];
-
-    protected $hidden = [
-        'id',
     ];
 
     public function users(): BelongsTo

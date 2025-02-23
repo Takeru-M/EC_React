@@ -25,6 +25,13 @@ class CartRepository
     return Cart::create($params);
   }
 
+  public function update($cart_id, $params)
+  {
+    $data = Cart::where('id', $cart_id)->first();
+    $data->update($params);
+    return $data->refresh();
+  }
+
   // public function getDetailCart($id)
   // {
   //   return Cart::where('id', $id)

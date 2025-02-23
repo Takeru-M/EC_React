@@ -95,6 +95,7 @@ const ProductDetail = () => {
   const addCart = () => {
     if (product && user_id) {
       dispatch(addToCart({user_id: 1, product_id: product.id, quantity: quantity}));
+      console.log(quantity);
       toast.success('カートに追加しました');
     } else {
       
@@ -239,7 +240,7 @@ const ProductDetail = () => {
                   <Select
                     value={quantity}
                     label="Qty"
-                    // onChange={handleQuantityChange}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
                   >
                     {product.stock > DEFAULT_OPTION_OF_ITEM_TO_BUY.length ? (
                       DEFAULT_OPTION_OF_ITEM_TO_BUY.map((num: number) => (

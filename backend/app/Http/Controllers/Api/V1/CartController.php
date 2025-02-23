@@ -66,7 +66,9 @@ class CartController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $params = $request->all();
+        $data = $this->cartService->update($id, $params);
+        return response()->json(['data' => $data], 200);
     }
 
     /**

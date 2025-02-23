@@ -18,7 +18,6 @@ const initialState: CartState = {
 
 // export const getCarts = createAsyncThunk<ApiResponse<Cart[]>, {user_id: number}>('cart/getCarts', async ({user_id}) => {
 //   const response = await api.get<ApiResponse<Cart[]>>(`/cart/${user_id}`);
-//   console.log(response.data);
 //   return response.data;
 // });
 
@@ -37,18 +36,15 @@ export const removeFromCart = createAsyncThunk<ApiResponse<Cart>, {cart_id: numb
   return response.data;
 });
 
+export const updateQuantity = createAsyncThunk<ApiResponse<Cart>, {cart_id: number, quantity: number}>('cart/updateQuantity', async (cartData) => {
+  const response = await api.put<ApiResponse<Cart>>(`/cart/${cartData.cart_id}`, {quantity: cartData.quantity});
+  return response.data;
+});
+
 const cartSlice = createSlice({
   name: 'cart',
   initialState,
-  reducers: {
-    updateCartQuantity: (state, action: PayloadAction<{cart_id: number, quantity: number}>) => {
-      const cart = state.carts_for_screen.find(cart => cart.id === action.payload.cart_id);
-      if (cart) {
-        cart.quantity = action.payload.quantity;
-        cart.total_price = cart.product.price * cart.quantity;
-      }
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchCarts.fulfilled, (state, action) => {
@@ -73,6 +69,15 @@ const cartSlice = createSlice({
           state.carts.push(action.payload.data);
         }
       })
+      .addCase(updateQuantity.fulfilled, (state, action) => {
+        if (action.payload.data) {
+          const cart = state.carts_for_screen.find(cart => cart.id === action.payload.data?.id);
+          if (cart) {
+            cart.quantity = action.payload.data?.quantity;
+            cart.total_price = cart.product.price * cart.quantity;
+          }
+        }
+      })
       .addCase(removeFromCart.fulfilled, (state, action) => {
         if (action.payload.data) {
           state.carts = state.carts.filter(cart => cart.id !== action.payload.data?.id);
@@ -81,5 +86,5 @@ const cartSlice = createSlice({
   }
 });
 
-export const { updateCartQuantity } = cartSlice.actions;
+// export const { updateCartQuantity } = cartSlice.actions;
 export default cartSlice.reducer;

@@ -19,8 +19,8 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useNavigate } from 'react-router-dom';
 import type { RootState, AppDispatch } from '../redux';
-import { Cart, CartResponse } from '../redux/carts/type';
-import { fetchCarts, removeFromCart, updateCartQuantity } from '../redux/carts/cartSlice';
+import { CartResponse } from '../redux/carts/type';
+import { fetchCarts, removeFromCart, updateQuantity } from '../redux/carts/cartSlice';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../constants/constants';
 
 const CartPage = () => {
@@ -50,14 +50,13 @@ const CartPage = () => {
     }
   };
 
+  // TODO: Change the value in database after finishing actions
   const handleQuantityChange = (cart_id: number, newQuantity: string) => {
     const quantity = Number(newQuantity);
-    if (quantity > 0) {
-      dispatch(updateCartQuantity({
-        cart_id: cart_id,
-        quantity: quantity
-      }));
-    }
+    dispatch(updateQuantity({
+      cart_id: cart_id,
+      quantity: quantity
+    }));
   };
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, newPage: number) => {

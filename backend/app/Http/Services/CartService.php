@@ -25,6 +25,11 @@ class CartService
     return $this->cartRepo->create($params);
   }
 
+  public function update($cart_id, $params)
+  {
+    return $this->cartRepo->update($cart_id, $params);
+  }
+
   public function delete($cart_id)
   {
     return $this->cartRepo->delete($cart_id);
