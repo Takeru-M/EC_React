@@ -78,8 +78,8 @@ class FavoriteController extends Controller
 
     public function getList(Request $request)
     {
-        $params = $request->only('user_id');
+        $params = $request->all();
         $data = $this->favoriteService->getList($params);
-        return response()->json(['data' => $data], 200);
+        return response()->json(['data' => $data['data'], 'total' => $data['total'], 'per_page' => $data['per_page'], 'current_page' => $data['current_page']], 200);
     }
 }

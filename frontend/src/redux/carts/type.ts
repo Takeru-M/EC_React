@@ -11,6 +11,9 @@ export interface CartState {
   carts: Cart[];
   carts_for_screen: CartResponse[];
   cart: Cart | null;
+  total: number;
+  per_page: number;
+  current_page: number;
 }
 
 export interface CartResponse {

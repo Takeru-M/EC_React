@@ -43,13 +43,13 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
   Route::get('/fetch_user', [AuthController::class, 'fetchUser']);
   Route::post('/signout', [AuthController::class, 'signout']);
 
-  Route::get('/cart/get_carts', [CartController::class, 'getCarts']);
-
   Route::put('/user/password/{user}', [UserController::class, 'updatePassword']);
 
   Route::resources([
     '/user' => UserController::class,
   ]);
+
+  Route::get('/cart/fetch_carts', [CartController::class, 'fetchCarts']);
 
   Route::resources([
     '/cart' => CartController::class,

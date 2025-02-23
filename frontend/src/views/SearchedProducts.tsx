@@ -2,7 +2,7 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import styles from '../css/Home.module.css';
 import { useTranslation } from "react-i18next";
-import { Container, Grid, Typography, Box } from '@mui/material';
+import { Container, Grid, Typography, Box, Pagination } from '@mui/material';
 import ProductItem from '../components/Home/Product';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -19,8 +19,9 @@ const SearchedProducts = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   const products = useSelector((state: RootState) => state.product.products);
-  const current_page = useSelector((state: RootState) => state.product.current_page);
+  const total = useSelector((state: RootState) => state.product.total);
   const per_page = useSelector((state: RootState) => state.product.per_page);
+  const current_page = useSelector((state: RootState) => state.product.current_page);
 
   useEffect(() => {
     const searchTerm = searchParams.get('q') || '';
@@ -32,6 +33,10 @@ const SearchedProducts = () => {
         page_size: per_page
     }));
   }, [searchParams]);
+
+  const handlePageChange = (_: React.ChangeEvent<unknown>, newPage: number) => {
+    // dispatch(fetchProducts({ page: newPage, page_size: DEFAULT_PAGE_SIZE }));
+  };
 
   const gotoProduct = (product: Product) => {
     navigate(`/product/${product.id}`);
@@ -50,6 +55,16 @@ const SearchedProducts = () => {
             </Grid>
           ))}
         </Grid>
+      </Box>
+
+      {/* Pagination */}
+      <Box display="flex" justifyContent="center" mt={4}>
+        <Pagination
+          count={Math.ceil(total / per_page)}
+          page={current_page}
+          onChange={handlePageChange}
+          color="primary"
+        />
       </Box>
     </Container>
   );

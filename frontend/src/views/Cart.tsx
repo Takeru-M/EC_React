@@ -14,22 +14,27 @@ import {
   TextField,
   Paper,
   Divider,
+  Pagination,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useNavigate } from 'react-router-dom';
 import type { RootState, AppDispatch } from '../redux';
 import { Cart, CartResponse } from '../redux/carts/type';
-import { getCarts, removeFromCart, updateCartQuantity } from '../redux/carts/cartSlice';
+import { fetchCarts, removeFromCart, updateCartQuantity } from '../redux/carts/cartSlice';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../constants/constants';
 
 const CartPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const carts = useSelector((state: RootState) => state.cart.carts_for_screen);
+  const total = useSelector((state: RootState) => state.cart.total);
+  const per_page = useSelector((state: RootState) => state.cart.per_page);
+  const current_page = useSelector((state: RootState) => state.cart.current_page);
   const user_id = useSelector((state: RootState) => state.user.user?.id);
 
   useEffect(() => {
     if (user_id) {
-      dispatch(getCarts({user_id: user_id}));
+      dispatch(fetchCarts({user_id: user_id, page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
     }
   }, []);
 
@@ -40,7 +45,7 @@ const CartPage = () => {
       }))
         .unwrap()
         .then(() => {
-          dispatch(getCarts({user_id}));
+          dispatch(fetchCarts({user_id: user_id, page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
         });
     }
   };
@@ -53,6 +58,10 @@ const CartPage = () => {
         quantity: quantity
       }));
     }
+  };
+
+  const handlePageChange = (_: React.ChangeEvent<unknown>, newPage: number) => {
+    // dispatch(fetchProducts({ page: newPage, page_size: DEFAULT_PAGE_SIZE }));
   };
 
   const handleCheckout = () => {
@@ -159,6 +168,18 @@ const CartPage = () => {
                 </Box>
               </Card>
             ))}
+
+            {/* Pagination */}
+            <Grid container justifyContent="center" alignItems="center" mt={4}>
+              <Box display="flex" justifyContent="center" mt={4}>
+                <Pagination
+                  count={Math.ceil(total / per_page)}
+                  page={current_page}
+                  onChange={handlePageChange}
+                  color="primary"
+                />
+              </Box>
+            </Grid>
           </Grid>
 
           <Grid item xs={12} md={4}>

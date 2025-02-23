@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Services\CartService;
-
+use App\Models\User;
 class CartController extends Controller
 {
     private $cartService;
@@ -79,11 +79,10 @@ class CartController extends Controller
         return response()->json(['data' => $data], 200);
     }
 
-    public function getCarts(Request $request)
+    public function fetchCarts(Request $request)
     {
-        $user_id = $request->input('user_id');
-        $data = $this->cartService->getCarts($user_id);
-
-        return response()->json(['data' => $data], 200);
+        $params = $request->all();
+        $data = $this->cartService->fetchCarts($params);
+        return response()->json(['data' => $data['data'], 'total' => $data['total'], 'per_page' => $data['per_page'], 'current_page' => $data['current_page']], 200);
     }
 }

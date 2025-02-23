@@ -267,7 +267,7 @@ const Account = () => {
               </Alert>
             )}
 
-            <form onSubmit={handleSubmit}>
+            <form>
               <Grid container spacing={3}>
                 <Grid item xs={12} sm={6}>
                   <TextField
@@ -370,6 +370,7 @@ const Account = () => {
                       variant="contained"
                       color="primary"
                       type="submit"
+                      onClick={handleSubmit}
                     >
                       Save Changes
                     </Button>

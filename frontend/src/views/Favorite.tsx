@@ -12,14 +12,16 @@ import {
   Rating,
   Box,
   IconButton,
+  Pagination,
 } from '@mui/material';
 import { ShoppingCart } from '@mui/icons-material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useNavigate } from 'react-router-dom';
 import type { RootState, AppDispatch } from '../redux';
-import { getFavorites, removeFromFavorite } from '../redux/favorites/favoriteSlice';
+import { fetchFavorites, removeFromFavorite } from '../redux/favorites/favoriteSlice';
 import { addToCart } from '../redux/carts/cartSlice';
 import { FavoriteResponse } from '../redux/favorites/type';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../constants/constants';
 
 const FavoritesPage = () => {
   const navigate = useNavigate();
@@ -27,10 +29,13 @@ const FavoritesPage = () => {
   const favorites = useSelector((state: RootState) => state.favorite.favorites_for_screen);
   const isLoading = useSelector((state: RootState) => state.favorite.isLoading);
   const user_id = useSelector((state: RootState) => state.user.user?.id);
+  const total = useSelector((state: RootState) => state.favorite.total);
+  const per_page = useSelector((state: RootState) => state.favorite.per_page);
+  const current_page = useSelector((state: RootState) => state.favorite.current_page);
 
   useEffect(() => {
     if (user_id) {
-      dispatch(getFavorites({user_id: user_id}));
+      dispatch(fetchFavorites({user_id: user_id, page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
     }
   }, []);
 
@@ -41,7 +46,7 @@ const FavoritesPage = () => {
       }))
         .unwrap()
         .then(() => {
-          dispatch(getFavorites({user_id: user_id}));
+          dispatch(fetchFavorites({user_id: user_id, page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
         });
     }
   };
@@ -68,6 +73,10 @@ const FavoritesPage = () => {
       </Container>
     );
   }
+
+  const handlePageChange = (_: React.ChangeEvent<unknown>, newPage: number) => {
+    // dispatch(fetchProducts({ page: newPage, page_size: DEFAULT_PAGE_SIZE }));
+  };
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -157,6 +166,17 @@ const FavoritesPage = () => {
               </Card>
             </Grid>
           ))}
+          {/* Pagination */}
+          <Grid container justifyContent="center" alignItems="center" mt={4}>
+            <Box display="flex" justifyContent="center" mt={4}>
+              <Pagination
+                count={Math.ceil(total / per_page)}
+                page={current_page}
+                onChange={handlePageChange}
+                color="primary"
+              />
+            </Box>
+          </Grid>
         </Grid>
       )}
     </Container>
