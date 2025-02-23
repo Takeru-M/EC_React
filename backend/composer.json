@@ -11,7 +11,8 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "predis/predis": "^2.3",
-        "spatie/laravel-permission": "^6.13"
+        "spatie/laravel-permission": "^6.13",
+        "stripe/stripe-php": "^16.5"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "*",

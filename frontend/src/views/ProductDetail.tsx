@@ -29,14 +29,16 @@ import { Link, useParams } from 'react-router-dom';
 import { ShoppingCart, Package, TruckIcon } from 'lucide-react';
 import Pagination from '../types/responses/Pagination';
 import { Favorite } from '../redux/favorites/type';
-import { fetchProduct } from '../redux/products/productSlice';
+import { fetchProduct, setIsLoading } from '../redux/products/productSlice';
 import { AppDispatch } from '../redux';
 import type { RootState } from '../redux';
 import { DEFAULT_OPTION_OF_ITEM_TO_BUY } from '../constants/product';
 import { addToCart } from '../redux/carts/cartSlice';
-import { addToFavorite, removeFromFavorite, fetchFavorites, setIsLoading } from '../redux/favorites/favoriteSlice';
+import { addToFavorite, removeFromFavorite, fetchFavorites } from '../redux/favorites/favoriteSlice';
 import { getReviewsWithUserNames, createReview } from '../redux/reviews/reviewSlice';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../constants/constants';
+import LoadingScreen from '../components/Common/Loading';
+import ErrorPage from '../views/Common/ErrorPage';
 
 // Mock data for demonstration
 const PRODUCT = {
@@ -76,11 +78,25 @@ const ProductDetail = () => {
   const favorites = useSelector((state: RootState) => state.favorite.favorites);
   const stockOfProduct = Array.from({length: product?.stock ?? 0}, (_, i) => i + 1);
   const reviews = useSelector((state: RootState) => state.review.reviews_for_display);
+  const isLoading = useSelector((state: RootState) => state.product.isLoading);
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
-    dispatch(fetchProduct({id: Number(id)}));
+    dispatch(setIsLoading(true));
+    dispatch(fetchProduct({id: Number(id)}))
+    .unwrap()
+    .finally(() => {
+      requestAnimationFrame(() => {
+        dispatch(setIsLoading(false));
+      });
+    });
   }, [id]);
+
+  // useEffect(() => {
+  //   requestAnimationFrame(() => {
+  //     dispatch(setIsLoading(false));
+  //   });
+  // }, [product]);
 
   useEffect(() => {
     if (user_id) {
@@ -139,9 +155,12 @@ const ProductDetail = () => {
 
   return (
     <>
-      {product ? (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-          <Grid container spacing={4}>
+      {isLoading ? (
+        <LoadingScreen message="Loading product..." />
+      ) : (
+        product ? (
+          <Container maxWidth="lg" sx={{ py: 4 }}>
+            <Grid container spacing={4}>
             {/* Left Column - Images */}
             <Grid item xs={12} md={3}>
               <Paper elevation={0} sx={{ p: 2 }}>
@@ -417,8 +436,8 @@ const ProductDetail = () => {
           </Grid>
         </Container>
       ) : (
-        <div>Product not found</div>
-      )}
+        <ErrorPage title="Product not found" message="The product you are looking for does not exist." />
+      ))}
     </>
   );
 };

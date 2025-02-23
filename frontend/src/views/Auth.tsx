@@ -62,6 +62,7 @@ const Auth = () => {
         navigate('/'); // Redirect to home page after successful auth
       } catch (err) {
         // TODO: エラーメッセージを表示
+        toast.error('Authentication failed. Please try again.');
         setError('Authentication failed. Please try again.');
       }
     } else {
@@ -71,6 +72,7 @@ const Auth = () => {
         navigate('/'); // Redirect to home page after successful auth
       } catch (err) {
         // TODO: エラーメッセージを表示
+        toast.error('Authentication failed. Please try again.');
         setError('Authentication failed. Please try again.');
       }
     }

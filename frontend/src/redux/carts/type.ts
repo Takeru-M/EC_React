@@ -14,6 +14,7 @@ export interface CartState {
   total: number;
   per_page: number;
   current_page: number;
+  isLoading: boolean;
 }
 
 export interface CartResponse {

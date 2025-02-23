@@ -14,6 +14,7 @@ const initialState: CartState = {
   total: 0,
   per_page: DEFAULT_PAGE_SIZE,
   current_page: DEFAULT_PAGE,
+  isLoading: false,
 };
 
 // export const getCarts = createAsyncThunk<ApiResponse<Cart[]>, {user_id: number}>('cart/getCarts', async ({user_id}) => {
@@ -44,7 +45,11 @@ export const updateQuantity = createAsyncThunk<ApiResponse<Cart>, {cart_id: numb
 const cartSlice = createSlice({
   name: 'cart',
   initialState,
-  reducers: {},
+  reducers: {
+    setIsLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchCarts.fulfilled, (state, action) => {
@@ -87,4 +92,6 @@ const cartSlice = createSlice({
 });
 
 // export const { updateCartQuantity } = cartSlice.actions;
+export const { setIsLoading } = cartSlice.actions;
+
 export default cartSlice.reducer;

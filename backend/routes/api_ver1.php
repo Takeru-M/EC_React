@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\FavoriteController;
 use App\Http\Controllers\Api\V1\ReviewController;
 use App\Http\Controllers\Api\V1\CategoryController;
+use App\Http\Controllers\Api\V1\StripeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,6 +38,8 @@ Route::resources([
 
 Route::get('/review/get_list', [ReviewController::class, 'getList']);
 Route::get('/review/get_reviews_with_user_names', [ReviewController::class, 'getReviewsWithUserNames']);
+
+Route::post('/create-payment-intent', [StripeController::class, 'createPaymentIntent']);
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
 

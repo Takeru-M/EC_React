@@ -27,6 +27,7 @@ export interface ProductState {
   total: number;
   current_page: number;
   per_page: number;
+  isLoading: boolean;
 };
 
 export type Action = {

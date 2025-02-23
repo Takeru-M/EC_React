@@ -14,6 +14,8 @@ import Account from './views/Account';
 import Favorite from './views/Favorite';
 import Cart from './views/Cart'
 import Header from './components/Header/Header';
+import Payment from './views/Payment';
+import NotFound from './views/Common/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 import { useEffect } from 'react';
@@ -43,6 +45,8 @@ function App() {
           <Route path="/favorite" element={<Favorite />} />
           <Route path="/cart" element={<Cart />} />
           {/* <Route path="/order_history" element={<OrderHistory />} /> */}
+          <Route path="/payment" element={<Payment />} />
+          <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </Provider>

@@ -11,6 +11,7 @@ const initialState: ProductState = {
   total: 0,
   per_page: DEFAULT_PAGE_SIZE,
   current_page: DEFAULT_PAGE,
+  isLoading: false,
 };
 
 export const fetchProducts = createAsyncThunk<ApiPaginationResponse<Product>, {page: number, page_size: number}>('product/fetchProducts', async ({page, page_size}) => {
@@ -42,6 +43,12 @@ const productSlice = createSlice({
       return {
         ...state,
         product: action.payload,
+      }
+    },
+    setIsLoading: (state, action: PayloadAction<boolean>) => {
+      return {
+        ...state,
+        isLoading: action.payload,
       }
     },
   },
@@ -76,6 +83,6 @@ const productSlice = createSlice({
   }
 });
 
-export const { setProduct } = productSlice.actions;
+export const { setProduct, setIsLoading } = productSlice.actions;
 
 export default productSlice.reducer;
