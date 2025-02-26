@@ -86,7 +86,7 @@ const CartPage = () => {
             Shopping Cart
           </Typography>
 
-          {carts ? (
+          {carts.length > 0 ? (
             <Grid container spacing={3}>
               <Grid item xs={12} md={8}>
                 {carts.map((cart: CartResponse) => (

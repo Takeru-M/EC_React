@@ -12,6 +12,7 @@ import { Product } from '../redux/products/type';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../constants/product';
 import { fetchCarts } from '../redux/carts/cartSlice';
 import LoadingScreen from '../components/Common/Loading';
+import { setSelectedCategory } from '../redux/categories/categorySlice';
 
 const Home = () => {
   const { t } = useTranslation();
@@ -41,6 +42,10 @@ const Home = () => {
     }
   }, []);
 
+  useEffect(() => {
+    dispatch(setSelectedCategory(0));
+  }, []);
+
   const handlePageChange = (_: React.ChangeEvent<unknown>, newPage: number) => {
     // dispatch(fetchProducts({ page: newPage, page_size: DEFAULT_PAGE_SIZE }));
   };
@@ -54,7 +59,7 @@ const Home = () => {
       {isLoading ? (
         <LoadingScreen message="Loading products..." />
       ) : (
-        products ? (
+        products.length > 0 ? (
           <Container maxWidth="lg" sx={{ py: 4 }}>
             <Typography variant="h4" component="h1" gutterBottom>
           {t('home.home_title')}

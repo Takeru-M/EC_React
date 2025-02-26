@@ -87,7 +87,7 @@ const FavoritesPage = () => {
             My Favorites
           </Typography>
 
-          {favorites ? (
+          {favorites.length > 0 ? (
             <Grid container spacing={3}>
               {favorites.map((favorite: FavoriteResponse) => (
                 <Grid item xs={12} sm={6} md={4} key={favorite.id}>

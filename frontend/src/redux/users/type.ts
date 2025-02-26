@@ -17,6 +17,8 @@ export interface UserState {
   users: User[];
   user: User | null;
   isSignin: boolean;
+  address: Address | null;
+  addresses: Address[];
 };
 
 export interface UpdateUserState {
@@ -50,6 +52,29 @@ export interface Auth {
   password: string;
   confirmPassword: string;
 }
+
+export interface Address {
+  id: number;
+  user_id: number;
+  name: string;
+  postal_code: string;
+  address: string;
+  country: string;
+  phone_number: string;
+  is_default: boolean;
+}
+
+export const defaultAddress: Address = {
+  id: 0,
+  user_id: 0,
+  name: '',
+  postal_code: '',
+  address: '',
+  country: '',
+  phone_number: '',
+  is_default: false,
+}
+
 
 export type Action = {
   type: string;

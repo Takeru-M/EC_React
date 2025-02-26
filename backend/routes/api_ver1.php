@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\FavoriteController;
 use App\Http\Controllers\Api\V1\ReviewController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\StripeController;
+use App\Http\Controllers\Api\V1\ShippingAddressController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +46,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 
   Route::get('/fetch_user', [AuthController::class, 'fetchUser']);
   Route::post('/signout', [AuthController::class, 'signout']);
+
+  Route::get('/user/address', [ShippingAddressController::class, 'fetchAddresses']);
+  Route::post('/user/address', [ShippingAddressController::class, 'createAddress']);
+  Route::put('/user/address', [ShippingAddressController::class, 'updateAddress']);
+  Route::delete('/user/address', [ShippingAddressController::class, 'deleteAddress']);
+  Route::put('/user/address/default', [ShippingAddressController::class, 'switchDefaultAddress']);
 
   Route::put('/user/password/{user}', [UserController::class, 'updatePassword']);
 

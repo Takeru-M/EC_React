@@ -3,14 +3,16 @@ import { User, UserState, UpdateUserState } from "./type";
 import { ApiResponse } from "../../types/responses/Api";
 import { Auth, Signin } from "./type";
 import { api, api_initial } from "../../constants/axios";
+import { Address } from "./type";
 
 const initialState: UserState = {
   users: [],
   user: null,
   isSignin: false,
+  address: null,
+  addresses: [],
 };
 
-// tmp パスを変える
 export const signup = createAsyncThunk<ApiResponse<User>, {formData: Auth}>('user/signup', async ({formData}) => {
   await api_initial.get("/sanctum/csrf-cookie");
   const response = await api.post<ApiResponse<User>>(`/signup`, formData);
@@ -41,11 +43,42 @@ export const updateUser = createAsyncThunk<ApiResponse<User>, {id: number, formD
   return response.data;
 });
 
+export const fetchAddresses = createAsyncThunk<ApiResponse<Address[]>, {id: number}>(
+  'user/fetchAddresses', async ({id}) => {
+  const response = await api.get<ApiResponse<Address[]>>(`/user/address/`, {params: {id}});
+  return response.data;
+});
+
+export const createAddress = createAsyncThunk<ApiResponse<Address>, {formData: Address}>(
+  'user/createAddress', async ({formData}) => {
+  const response = await api.post<ApiResponse<Address>>(`/user/address`, formData);
+  return response.data;
+});
+
+export const updateAddress = createAsyncThunk<ApiResponse<Address>, {formData: Address}>(
+  'user/updateAddress', async ({formData}) => {
+  const response = await api.put<ApiResponse<Address>>(`/user/address`, formData);
+  return response.data;
+});
+
+export const deleteAddress = createAsyncThunk<ApiResponse<Address>, {id: number}>(
+  'user/deleteAddress', async ({id}) => {
+  const response = await api.delete<ApiResponse<Address>>(`/user/address/`, {params: {id}});
+  return response.data;
+});
+
+export const switchDefaultAddress = createAsyncThunk<ApiResponse<Address>, {id: number, is_default: boolean}>(
+  'user/switchDefaultAddress', async ({id, is_default}) => {
+  const response = await api.put<ApiResponse<Address>>(`/user/address/default`, {id, is_default});
+  return response.data;
+});
+
 export const updatePassword = createAsyncThunk<void, {id: number, current_password: string, new_password: string}>(
   'user/updatePassword', async ({id, current_password, new_password}) => {
   const response = await api.put<void>(`/user/password/${id}`, {current_password, new_password});
   return response.data;
 });
+
 
 export const userSlice = createSlice({
   name: "user",
@@ -55,6 +88,13 @@ export const userSlice = createSlice({
       return {
         ...state,
         user: action.payload,
+      }
+    },
+    setDefaultAddress: (state, action: PayloadAction<{id: number, is_default: boolean}>) => {
+      const address = state.addresses.find(addr => addr.id === action.payload.id);
+      if (address) {
+        address.is_default = action.payload.is_default;
+        state.address = address;
       }
     },
   },
@@ -96,6 +136,31 @@ export const userSlice = createSlice({
           state.user = action.payload.data;
         }
       })
+      .addCase(fetchAddresses.fulfilled, (state, action) => {
+        if (action.payload.data) {
+          state.addresses = action.payload.data;
+        }
+      })
+      .addCase(createAddress.fulfilled, (state, action) => {
+        if (action.payload.data) {
+          state.addresses.push(action.payload.data);
+        }
+      })
+      .addCase(updateAddress.fulfilled, (state, action) => {
+        if (action.payload.data) {
+          state.address = action.payload.data;
+        }
+      })
+      .addCase(deleteAddress.fulfilled, (state, action) => {
+        if (action.payload.data) {
+          state.addresses = state.addresses.filter((address) => address.id !== action.payload.data.id);
+        }
+      })
+      .addCase(switchDefaultAddress.fulfilled, (state, action) => {
+        // if (action.payload.data) {
+        //   state.address = action.payload.data;
+        // }
+      })
       .addCase(updatePassword.fulfilled, () => {})
       // .addCase(updatePassword.rejected, (state, action) => {
       //   state.error = action.payload || 'An error occurred';
@@ -106,7 +171,7 @@ export const userSlice = createSlice({
   },
 });
 
-export const { setUser } = userSlice.actions;
+export const { setUser, setDefaultAddress } = userSlice.actions;
 
 export default userSlice.reducer;
 

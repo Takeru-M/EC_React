@@ -27,10 +27,7 @@ import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import type { AppDispatch, RootState } from '../../redux';
 import { signout } from '../../redux/users/userSlice';
-import { fetchProducts, searchProducts } from '../../redux/products/productSlice';
-import { fetchCategories } from '../../redux/categories/categorySlice';
-import { Category } from '../../redux/categories/type';
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../constants/product';
+import { fetchCategories, setSelectedCategory } from '../../redux/categories/categorySlice';
 
 
 const Search = styled('div')(({ theme }) => ({
@@ -101,12 +98,11 @@ const Header = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState(0);
 
   const categories = useSelector((state: RootState) => state.category.categories);
   const numOfCart = useSelector((state: RootState) => state.cart.carts.length);
   const isSignin = useSelector((state: RootState) => state.user.isSignin);
-  const user = useSelector((state: RootState) => state.user.user);
+  const selectedCategory = useSelector((state: RootState) => state.category.selectedCategory);
 
   useEffect(() => {
     dispatch(fetchCategories());
@@ -117,19 +113,12 @@ const Header = () => {
   };
 
   const handleSearch = () => {
-    // if (searchTerm === "" && selectedCategory === 0) {
-    //   dispatch(fetchProducts({page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
-    //   navigate('/');
-    // } else {
-    //   dispatch(searchProducts({searchTerm: searchTerm, category_id: selectedCategory, page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
-    //   navigate(`/search?q=${encodeURIComponent(searchTerm)}&category_id=${selectedCategory}`);
-    // }
     navigate(`/search?q=${encodeURIComponent(searchTerm)}&category_id=${selectedCategory}`);
   };
 
   const handleCategoryChange = (event: SelectChangeEvent<unknown>) => {
     const newCategory = event.target.value as number;
-    setSelectedCategory(newCategory);
+    dispatch(setSelectedCategory(newCategory));
   };
 
   // TODO: Add some function to menu

@@ -87,7 +87,7 @@ class ProductRepository
   {
       $data = Product::where('id', $id)->first();
       $data->update($params);
-      return $data;
+      return $data->refresh();
   }
 
   public function delete($id)
