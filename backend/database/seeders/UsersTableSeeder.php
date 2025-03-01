@@ -6,7 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Constants\RoleConst;
-
+use Illuminate\Support\Str;
 class UsersTableSeeder extends Seeder
 {
   /**
@@ -15,7 +15,7 @@ class UsersTableSeeder extends Seeder
   public function run(): void
   {
     // Create admin user
-    $admin = User::create([
+    User::create([
       'login_name' => 'sample',
       'first_name' => 'サンプル',
       'last_name' => 'サンプル',

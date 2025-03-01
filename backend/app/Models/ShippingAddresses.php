@@ -5,18 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ShippingAdress extends Model
+class ShippingAddress extends Model
 {
-    protected $fillable = [
-      'postal_code',
-      'address',
-      'phone_number',
-      'name'
-    ];
 
-    protected $hidden = [
+    protected $table = 'shipping_address';
+
+    protected $fillable = [
       'id',
       'user_id',
+      'name',
+      'postal_code',
+      'address',
+      'country',
+      'phone_number',
+      'is_default'
     ];
 
     public function users(): BelongsTo

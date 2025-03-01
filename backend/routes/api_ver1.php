@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\FavoriteController;
 use App\Http\Controllers\Api\V1\ReviewController;
 use App\Http\Controllers\Api\V1\CategoryController;
+use App\Http\Controllers\Api\V1\StripeController;
+use App\Http\Controllers\Api\V1\ShippingAddressController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,13 +37,31 @@ Route::resources([
   '/product' => ProductController::class,
 ]);
 
-Route::get('/review/get_list', [ReviewController::class, 'getList']);
-Route::get('/review/get_reviews_with_user_names', [ReviewController::class, 'getReviewsWithUserNames']);
+Route::get('/review/get-list', [ReviewController::class, 'getList']);
+Route::get('/review/get-reviews-with-user-names', [ReviewController::class, 'getReviewsWithUserNames']);
+
+Route::post('/create-payment-intent', [StripeController::class, 'createPaymentIntent']);
+
+Route::post('/guest-user', [AuthController::class, 'createGuestUser']);
+Route::get('/fetch-user', [AuthController::class, 'fetchUser']);
+
+Route::get('/cart/guest', [CartController::class, 'fetchCartsForGuest']);
+Route::post('/cart/guest', [CartController::class, 'storeForGuest']);
+Route::delete('/cart', [CartController::class, 'destroy']);
+
+Route::get('/favorite/guest', [FavoriteController::class, 'fetchFavoritesForGuest']);
+Route::post('/favorite/guest', [FavoriteController::class, 'storeForGuest']);
+Route::delete('/favorite', [FavoriteController::class, 'destroy']);
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
 
-  Route::get('/fetch_user', [AuthController::class, 'fetchUser']);
   Route::post('/signout', [AuthController::class, 'signout']);
+
+  Route::get('/user/address', [ShippingAddressController::class, 'fetchAddresses']);
+  Route::post('/user/address', [ShippingAddressController::class, 'createAddress']);
+  Route::put('/user/address', [ShippingAddressController::class, 'updateAddress']);
+  Route::delete('/user/address', [ShippingAddressController::class, 'deleteAddress']);
+  Route::put('/user/address/default', [ShippingAddressController::class, 'switchDefaultAddress']);
 
   Route::put('/user/password/{user}', [UserController::class, 'updatePassword']);
 
@@ -49,13 +69,15 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     '/user' => UserController::class,
   ]);
 
-  Route::get('/cart/fetch_carts', [CartController::class, 'fetchCarts']);
+  Route::get('/cart/fetch-carts', [CartController::class, 'fetchCarts']);
+  Route::post('/cart/integrate', [CartController::class, 'integrateCart']);
 
   Route::resources([
     '/cart' => CartController::class,
   ]);
 
-  Route::get('/favorite/get_favorites', [FavoriteController::class, 'getList']);
+  Route::get('/favorite/fetch-favorites', [FavoriteController::class, 'fetchFavorites']);
+  Route::post('/favorite/integrate', [FavoriteController::class, 'integrateFavorite']);
 
   Route::resources([
     '/favorite' => FavoriteController::class,

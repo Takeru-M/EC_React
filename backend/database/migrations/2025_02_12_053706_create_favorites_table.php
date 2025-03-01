@@ -15,17 +15,10 @@ return new class extends Migration
     {
         Schema::create('favorites', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('product_id');
+            $table->foreignId('user_id')->nullable()->constrained('users');
+            $table->foreignId('guest_id')->nullable()->constrained('guest_users');
+            $table->foreignId('product_id')->constrained('products');
             $table->timestamps();
-
-            $table->foreign('user_id')
-              ->references('id')
-              ->on('users');
-
-            $table->foreign('product_id')
-              ->references('id')
-              ->on('products');
         });
     }
 

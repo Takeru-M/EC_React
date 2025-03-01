@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Repositories;
 
 use App\Models\User;
+use App\Models\ShippingAddress;
 use Illuminate\Support\Facades\Auth;
 
 class UserRepository
@@ -50,7 +51,7 @@ class UserRepository
           $data->save();
       }
 
-      return $data;
+      return $data->refresh();
   }
 
   public function delete($id)

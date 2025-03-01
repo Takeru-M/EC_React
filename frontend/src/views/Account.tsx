@@ -41,28 +41,18 @@ import {
 import { useNavigate } from 'react-router-dom';
 // import { supabase } from '../lib/supabaseClient';
 import type { RootState, AppDispatch } from '../redux';
-import { updatePassword, updateUser } from '../redux/users/userSlice';
-import { UpdateUserState } from '../redux/users/type';
-
-interface Address {
-  id: string;
-  name: string;
-  recipient_name: string;
-  street_address: string;
-  city: string;
-  state: string;
-  postal_code: string;
-  country: string;
-  phone: string;
-  is_default: boolean;
-}
+import { createAddress, updateAddress, deleteAddress, switchDefaultAddress, setDefaultAddress, updatePassword, updateUser } from '../redux/users/userSlice';
+import { defaultAddress, UpdateUserState } from '../redux/users/type';
+import AddressDialog from '../components/Dialog/AddressDialog';
+import DeleteAddressDialog from '../components/Dialog/DeleteAddressDialog';
+import { Address } from '../redux/users/type';
+import { fetchAddresses } from '../redux/users/userSlice';
 
 const Account = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user.user);
   const [isEditing, setIsEditing] = useState(false);
-  // const [addresses, setAddresses] = useState<Address[]>([]);
   const [formData, setFormData] = useState<UpdateUserState>({
     login_name: user?.login_name || '',
     first_name: user?.first_name || '',
@@ -74,6 +64,7 @@ const Account = () => {
     postal_code: user?.postal_code || '',
     address: user?.address || '',
   });
+  const addresses = useSelector((state: RootState) => state.user.addresses);
 
   // Password change state
   const [passwordDialog, setPasswordDialog] = useState(false);
@@ -87,34 +78,21 @@ const Account = () => {
 
   // Address dialog state
   const [addressDialog, setAddressDialog] = useState(false);
-  const [currentAddress, setCurrentAddress] = useState<Partial<Address>>({});
+  const [currentAddress, setCurrentAddress] = useState<Address | null>(null);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
+
+  const [deleteAddressDialog, setDeleteAddressDialog] = useState(false);
 
   useEffect(() => {
     if (user) {
-      fetchAddresses();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) {
+      dispatch(fetchAddresses({id: user.id}));
+    } else {
       navigate('/signin');
     }
   }, [user]);
 
-  const fetchAddresses = async () => {
-    try {
-      // const { data, error } = await supabase
-      //   .from('shipping_addresses')
-      //   .select('*')
-      //   .order('is_default', { ascending: false });
-
-      // if (error) throw error;
-      // setAddresses(data || []);
-    } catch (error) {
-      console.error('Error fetching addresses:', error);
-    }
-  };
+  useEffect(() => {
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -173,69 +151,102 @@ const Account = () => {
     }
   };
 
-  const handleAddressSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSwitchChange = async(id: number, is_default: boolean) => {
+    if (is_default) {
+      toast.error('There must be only one default address');
+      return;
+    }
+
+    const defaultAddress = addresses.filter(address => address.is_default)[0];
+    dispatch(setDefaultAddress({ id: defaultAddress.id, is_default: false }));
+    dispatch(setDefaultAddress({ id: id, is_default: true }));
+
     try {
-      // if (isEditingAddress && currentAddress.id) {
-      //   const { error } = await supabase
-      //     .from('shipping_addresses')
-      //     .update(currentAddress)
-      //     .eq('id', currentAddress.id);
-      //   if (error) throw error;
-      // } else {
-      //   const { error } = await supabase
-      //     .from('shipping_addresses')
-      //     .insert([{ ...currentAddress, user_id: user?.id }]);
-      //   if (error) throw error;
-      // }
-      
-      // setAddressDialog(false);
-      // setCurrentAddress({});
-      // fetchAddresses();
+      await dispatch(switchDefaultAddress({ id: defaultAddress.id, is_default: false }));
+      await dispatch(switchDefaultAddress({id, is_default: true}));
+      await dispatch(fetchAddresses({id: user?.id as number}));
+      toast.success('Default address updated successfully');
     } catch (error) {
-      console.error('Error saving address:', error);
+      dispatch(switchDefaultAddress({ id: defaultAddress.id, is_default: true }));
+      dispatch(switchDefaultAddress({ id: id, is_default: false }));
+      console.error('Error switching default address:', error);
+    }
+  };
+
+  const handleAddressSubmit = async (e: React.FormEvent, formData: Address) => {
+    e.preventDefault();
+    if (user) {
+      formData.user_id = user.id;
+    }
+
+    if (isEditingAddress) {
+      try {
+        await dispatch(updateAddress({formData}));
+        setAddressDialog(false);
+        setCurrentAddress(defaultAddress);
+        setIsEditingAddress(false);
+        toast.success('Address updated successfully');
+      } catch (error) {
+        console.error('Error updating address:', error);
+      }
+    } else {
+      try {
+        await dispatch(createAddress({formData}));
+        setAddressDialog(false);
+        setCurrentAddress(defaultAddress);
+        toast.success('Address created successfully');
+      } catch (error) {
+        console.error('Error saving address:', error);
+      }
+    }
+  };
+
+  const handleDeleteAddress = async () => {
+    try {
+      if (currentAddress) {
+        await dispatch(deleteAddress({id: Number(currentAddress.id)}));
+        setDeleteAddressDialog(false);
+        toast.success('Address deleted successfully');
+        // fetchAddresses();
+      }
+    } catch (error) {
+      console.error('Error deleting address:', error);
     }
   };
 
 
-  const addresses: Address[] = [
-    {
-      id: "1",
-      name: "Home",
-      recipient_name: "Taro Yamada",
-      street_address: "1-2-3 Shibuya",
-      city: "Tokyo",
-      state: "Tokyo",
-      postal_code: "150-0002",
-      country: "Japan",
-      phone: "090-1234-5678",
-      is_default: true,
-    },
-    {
-      id: "2",
-      name: "Office",
-      recipient_name: "Taro Yamada",
-      street_address: "4-5-6 Akasaka",
-      city: "Tokyo",
-      state: "Tokyo",
-      postal_code: "107-0052",
-      country: "Japan",
-      phone: "080-9876-5432",
-      is_default: false,
-    },
-    {
-      id: "3",
-      name: "Parents' House",
-      recipient_name: "Hiroshi Yamada",
-      street_address: "7-8-9 Namba",
-      city: "Osaka",
-      state: "Osaka",
-      postal_code: "542-0076",
-      country: "Japan",
-      phone: "06-1234-5678",
-      is_default: false,
-    },
-  ];
+  // const addresses: Address[] = [
+  //   {
+  //     id: 1,
+  //     user_id: 1,
+  //     name: "Home",
+  //     address: "1-2-3 Shibuya",
+  //     postal_code: "150-0002",
+  //     country: "Japan",
+  //     phone_number: "090-1234-5678",
+  //     is_default: true,
+  //   },
+  //   {
+  //     id: 2,
+  //     user_id: 1,
+  //     name: "Office",
+  //     address: "4-5-6 Akasaka",
+  //     postal_code: "107-0052",
+  //     country: "Japan",
+  //     phone_number: "080-9876-5432",
+  //     is_default: false,
+  //   },
+  //   {
+  //     id: 3,
+  //     user_id: 1,
+  //     name: "Parents' House",
+  //     address: "7-8-9 Namba",
+  //     postal_code: "542-0076",
+  //     country: "Japan",
+  //     phone_number: "06-1234-5678",
+  //     is_default: false,
+  //   },
+  // ];
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -244,7 +255,7 @@ const Account = () => {
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-              <Avatar
+              {/* <Avatar
                 sx={{
                   width: 100,
                   height: 100,
@@ -253,10 +264,10 @@ const Account = () => {
                 }}
               >
                 {formData.first_name?.[0]?.toUpperCase() || 'U'}
-              </Avatar>
+              </Avatar> */}
               <Box sx={{ ml: 3 }}>
                 <Typography variant="h4" gutterBottom>
-                  {`${formData.first_name} ${formData.last_name}`}
+                  {`${formData.login_name}`}
                 </Typography>
               </Box>
             </Box>
@@ -411,7 +422,7 @@ const Account = () => {
                 variant="contained"
                 startIcon={<AddIcon />}
                 onClick={() => {
-                  setCurrentAddress({});
+                  setCurrentAddress(defaultAddress);
                   setIsEditingAddress(false);
                   setAddressDialog(true);
                 }}
@@ -441,20 +452,20 @@ const Account = () => {
                       secondary={
                         <>
                           <Typography component="span" display="block">
-                            {address.recipient_name}
+                            {address.address}
                           </Typography>
                           <Typography component="span" display="block">
-                            {address.street_address}
+                            {address.postal_code}
                           </Typography>
-                          <Typography component="span" display="block">
+                          {/* <Typography component="span" display="block">
                             {`${address.city}, ${address.state} ${address.postal_code}`}
-                          </Typography>
+                          </Typography> */}
                           <Typography component="span" display="block">
                             {address.country}
                           </Typography>
-                          {address.phone && (
+                          {address.phone_number && (
                             <Typography component="span" display="block">
-                              {address.phone}
+                              {address.phone_number}
                             </Typography>
                           )}
                         </>
@@ -465,7 +476,7 @@ const Account = () => {
                         edge="end"
                         checked={address.is_default}
                         onChange={() => {
-                          // Handle setting default address
+                          handleSwitchChange(address.id, address.is_default);
                         }}
                       />
                       <IconButton
@@ -482,7 +493,7 @@ const Account = () => {
                       <IconButton
                         edge="end"
                         onClick={() => {
-                          // Handle delete address
+                          setDeleteAddressDialog(true);
                         }}
                         sx={{ ml: 1 }}
                       >
@@ -578,6 +589,21 @@ const Account = () => {
           </DialogActions>
         </form>
       </Dialog>
+
+      {/* Address Dialog */}
+      <AddressDialog
+        open={addressDialog}
+        onClose={() => setAddressDialog(false)}
+        onSubmit={(e, formData) => handleAddressSubmit(e, formData)}
+        initialData={currentAddress}
+      />
+
+      {/* Delete Address Dialog */}
+      <DeleteAddressDialog
+        open={deleteAddressDialog}
+        onClose={() => setDeleteAddressDialog(false)}
+        onDelete={handleDeleteAddress}
+      />
     </Container>
   );
 };
