@@ -21,6 +21,7 @@ import {
   Collapse,
   IconButton,
   Alert,
+  CircularProgress,
 } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import CloseIcon from '@mui/icons-material/Close';
@@ -33,8 +34,8 @@ import { fetchProduct, setIsLoading } from '../redux/products/productSlice';
 import { AppDispatch } from '../redux';
 import type { RootState } from '../redux';
 import { DEFAULT_OPTION_OF_ITEM_TO_BUY } from '../constants/product';
-import { addToCart } from '../redux/carts/cartSlice';
-import { addToFavorite, removeFromFavorite, fetchFavorites } from '../redux/favorites/favoriteSlice';
+import { addToCart, addToCartForGuest } from '../redux/carts/cartSlice';
+import { addToFavorite, removeFromFavorite, fetchFavorites, addToFavoriteForGuest, removeFromFavoriteForGuest, fetchFavoritesForGuest } from '../redux/favorites/favoriteSlice';
 import { getReviewsWithUserNames, createReview } from '../redux/reviews/reviewSlice';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../constants/constants';
 import LoadingScreen from '../components/Common/Loading';
@@ -80,6 +81,7 @@ const ProductDetail = () => {
   const reviews = useSelector((state: RootState) => state.review.reviews_for_display);
   const isLoading = useSelector((state: RootState) => state.product.isLoading);
   const dispatch = useDispatch<AppDispatch>();
+  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
 
   useEffect(() => {
     dispatch(setIsLoading(true));
@@ -92,15 +94,11 @@ const ProductDetail = () => {
     });
   }, [id]);
 
-  // useEffect(() => {
-  //   requestAnimationFrame(() => {
-  //     dispatch(setIsLoading(false));
-  //   });
-  // }, [product]);
-
   useEffect(() => {
     if (user_id) {
       dispatch(fetchFavorites({user_id: user_id, page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
+    } else {
+      dispatch(fetchFavoritesForGuest({page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
     }
   }, []);
 
@@ -110,26 +108,50 @@ const ProductDetail = () => {
 
   const addCart = () => {
     if (product && user_id) {
-      dispatch(addToCart({user_id: 1, product_id: product.id, quantity: quantity}));
-      console.log(quantity);
-      toast.success('カートに追加しました');
-    } else {
-      
-      toast.success('カートに追加しました');
+      try {
+        dispatch(addToCart({user_id: user_id, product_id: product.id, quantity: quantity}));
+        toast.success('Add to cart successfully');
+      } catch (error) {
+        toast.error('Failed to add to cart');
+      }
+    } else if (product) {
+      try {
+        dispatch(addToCartForGuest({product_id: product.id, quantity: quantity}));
+        toast.success('Add to cart successfully');
+      } catch (error) {
+        toast.error('Failed to add to cart');
+      }
     }
   };
 
-  const addFavorite = () => {
-    if (product && user_id) {
-      dispatch(addToFavorite({user_id: user_id, product_id: product.id}));
-    } else {
-      navigate('/signin');
+  const addFavorite = async() => {
+    if (product) {
+      setIsFavoriteLoading(true);
+      try {
+        if (user_id) {
+          await dispatch(addToFavorite({ user_id, product_id: product.id })).unwrap();
+        } else {
+          await dispatch(addToFavoriteForGuest({ product_id: product.id })).unwrap();
+        }
+      } catch (error) {
+        toast.error('Failed to add to favorites');
+      } finally {
+        setIsFavoriteLoading(false);
+      }
     }
   };
 
-  const removeFavorite = () => {
-    if (product && user_id) {
-      dispatch(removeFromFavorite({favorite_id: product.id}));
+  const removeFavorite = async() => {
+    const favorite = favorites.find((favorite: Favorite) => favorite.product_id === product?.id);
+    if (favorite) {
+      setIsFavoriteLoading(true);
+      try {
+        await dispatch(removeFromFavorite({ favorite_id: favorite.id })).unwrap();
+      } catch (error) {
+        toast.error('Failed to remove from favorites');
+      } finally {
+        setIsFavoriteLoading(false);
+      }
     }
   };
 
@@ -283,8 +305,9 @@ const ProductDetail = () => {
                     color="warning"
                     fullWidth
                     sx={{ mb: 1 }}
-                    startIcon={<FavoriteIcon sx={{ color: 'red' }} />}
-                    onClick={() => removeFavorite()}
+                    startIcon={isFavoriteLoading ? <CircularProgress size={20} color="inherit" /> : <FavoriteIcon sx={{ color: 'red' }} />}
+                    onClick={removeFavorite}
+                    disabled={isFavoriteLoading}
                   >
                     Remove from Favorite
                   </Button>
@@ -294,8 +317,9 @@ const ProductDetail = () => {
                     color="warning"
                     fullWidth
                     sx={{ mb: 1 }}
-                    startIcon={<FavoriteIcon />}
-                    onClick={() => addFavorite()}
+                    startIcon={isFavoriteLoading ? <CircularProgress size={20} color="inherit" /> : <FavoriteIcon />}
+                    onClick={addFavorite}
+                    disabled={isFavoriteLoading}
                   >
                     Add to Favorite
                   </Button>

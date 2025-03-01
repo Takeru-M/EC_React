@@ -30,9 +30,9 @@ class FavoriteService
     return $this->favoriteRepo->delete($favorite_id);
   }
 
-  public function getList($params)
+  public function fetchFavorites($params)
   {
-    $response = $this->favoriteRepo->getList($params);
+    $response = $this->favoriteRepo->fetchFavorites($params);
     $favorites = $response['data'];
 
     $data['data'] = $favorites->map(function ($item) {
@@ -56,5 +56,20 @@ class FavoriteService
 
     return $data;
   }
-}
 
+  public function fetchFavoritesForGuest($params)
+  {
+    $response = $this->favoriteRepo->fetchFavoritesForGuest($params);
+    return $response;
+  }
+
+  public function createForGuest($params)
+  {
+    return $this->favoriteRepo->createForGuest($params);
+  }
+
+  public function integrateFavorite($params)
+  {
+    return $this->favoriteRepo->integrateFavorite($params);
+  }
+}

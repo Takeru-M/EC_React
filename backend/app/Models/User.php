@@ -23,6 +23,7 @@ class User extends Authenticatable
    * @var list<string>
    */
   protected $fillable = [
+    'guest_id',
     'login_name',
     'first_name',
     'last_name',
@@ -69,7 +70,7 @@ class User extends Authenticatable
 
   public function shippingAddresses(): HasMany
   {
-    return $this->hasMany(ShippingAdress::class);
+    return $this->hasMany(ShippingAddress::class);
   }
 
   public function reviews(): HasMany

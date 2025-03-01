@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Title } from '../../constants/header';
 import { useTranslation } from "react-i18next";
 import {
@@ -26,9 +26,11 @@ import {
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import type { AppDispatch, RootState } from '../../redux';
-import { signout } from '../../redux/users/userSlice';
+import { createGuestUser, signout } from '../../redux/users/userSlice';
 import { fetchCategories, setSelectedCategory } from '../../redux/categories/categorySlice';
-
+import { clearCart, fetchCarts, fetchCartsForGuest } from '../../redux/carts/cartSlice';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../constants/product';
+import { setIsLoading } from '../../redux/products/productSlice';
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -96,24 +98,42 @@ const Header = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+  const location = useLocation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const categories = useSelector((state: RootState) => state.category.categories);
   const numOfCart = useSelector((state: RootState) => state.cart.carts.length);
   const isSignin = useSelector((state: RootState) => state.user.isSignin);
   const selectedCategory = useSelector((state: RootState) => state.category.selectedCategory);
+  const user = useSelector((state: RootState) => state.user.user);
 
   useEffect(() => {
     dispatch(fetchCategories());
-  }, [dispatch]);
+  }, []);
+
+  useEffect(() => {
+    if (user?.id) {
+      dispatch(fetchCarts({user_id: user.id, page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
+    } else {
+      dispatch(fetchCartsForGuest({page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (isNavigating) {
+      navigate(`/search?q=${encodeURIComponent(searchTerm)}&category_id=${selectedCategory}`);
+    }
+  }, [isNavigating]);
 
   const handleSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
 
   const handleSearch = () => {
-    navigate(`/search?q=${encodeURIComponent(searchTerm)}&category_id=${selectedCategory}`);
+    dispatch(setIsLoading(true));
+    setIsNavigating(true);
   };
 
   const handleCategoryChange = (event: SelectChangeEvent<unknown>) => {
@@ -139,12 +159,16 @@ const Header = () => {
   }
 
   const Signin = () => {
+    localStorage.setItem('prevPath', location.pathname);
     navigate('/signin');
   }
 
-  const Signout = () => {
-    dispatch(signout());
-    navigate(0);
+  const Signout = async () => {
+    await dispatch(signout());
+    await dispatch(clearCart());
+    await dispatch(createGuestUser());
+    navigate(location.pathname);
+    toast.success('Sign out successful');
   }
 
   // const categories = [
@@ -158,7 +182,8 @@ const Header = () => {
   return (
     <AppBar position="static">
       <Toolbar>
-        <IconButton
+        {/* TODO: Add menu if needed */}
+        {/* <IconButton
           size="large"
           edge="start"
           color="inherit"
@@ -166,7 +191,7 @@ const Header = () => {
           sx={{ mr: 2 }}
         >
           <MenuIcon />
-        </IconButton>
+        </IconButton> */}
 
         <Typography
           variant="h6"
@@ -250,6 +275,7 @@ const Header = () => {
             ) : (
               <>
                 <MenuItem onClick={Signin}>{t('header.account.signin')}</MenuItem>
+                <MenuItem onClick={gotoFavorite}>{t('header.account.favorites')}</MenuItem>
               </>
             )}
           </Menu>

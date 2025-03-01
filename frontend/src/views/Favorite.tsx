@@ -18,12 +18,13 @@ import { ShoppingCart } from '@mui/icons-material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useNavigate } from 'react-router-dom';
 import type { RootState, AppDispatch } from '../redux';
-import { fetchFavorites, removeFromFavorite } from '../redux/favorites/favoriteSlice';
+import { fetchFavorites, fetchFavoritesForGuest, removeFromFavorite } from '../redux/favorites/favoriteSlice';
 import { addToCart } from '../redux/carts/cartSlice';
 import { setIsLoading } from '../redux/favorites/favoriteSlice';
 import { FavoriteResponse } from '../redux/favorites/type';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../constants/constants';
 import LoadingScreen from '../components/Common/Loading';
+import { toast } from 'react-toastify';
 
 const FavoritesPage = () => {
   const navigate = useNavigate();
@@ -43,29 +44,37 @@ const FavoritesPage = () => {
         .finally(() => {
           dispatch(setIsLoading(false));
         });
-    }
-  }, []);
-
-  const handleRemoveFromFavorites = (favoriteId: number) => {
-    if (user_id) {
-      dispatch(removeFromFavorite({
-        favorite_id: favoriteId
-      }))
+    } else {
+      dispatch(setIsLoading(true));
+      dispatch(fetchFavoritesForGuest({page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}))
         .unwrap()
-        .then(() => {
-          dispatch(fetchFavorites({user_id: user_id, page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
+        .finally(() => {
+          dispatch(setIsLoading(false));
         });
+    }
+  }, [user_id]);
+
+  const handleRemoveFromFavorites = async(favoriteId: number) => {
+    await dispatch(removeFromFavorite({
+      favorite_id: favoriteId
+    }))
+    if (user_id) {
+      dispatch(fetchFavorites({user_id: user_id as number, page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
+    } else {
+      dispatch(fetchFavoritesForGuest({page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
     }
   };
 
-  const handleAddToCart = (product_id: number) => {
-    if (user_id) {
-      dispatch(addToCart({
-        user_id: user_id,
+  const handleAddToCart = async(product_id: number) => {
+    try {
+      await dispatch(addToCart({
+        user_id: user_id as number,
         product_id: product_id,
         quantity: 1
       }));
-      // tmp メッセージを表示
+      toast.success('Add to cart successfully');
+    } catch (error) {
+      toast.error('Failed to add to cart');
     }
   };
 
@@ -74,7 +83,11 @@ const FavoritesPage = () => {
   };
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, newPage: number) => {
-    // dispatch(fetchProducts({ page: newPage, page_size: DEFAULT_PAGE_SIZE }));
+    if (user_id) {
+      dispatch(fetchFavorites({user_id: user_id as number, page: newPage, page_size: DEFAULT_PAGE_SIZE}));
+    } else {
+      dispatch(fetchFavoritesForGuest({page: newPage, page_size: DEFAULT_PAGE_SIZE}));
+    }
   };
 
   return (

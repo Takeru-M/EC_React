@@ -16,12 +16,12 @@ const initialState: ReviewState = {
 };
 
 export const getReviews = createAsyncThunk<ApiPaginationResponse<FetchedReviewResponse>, {product_id: number}>('review/getList', async ({product_id}) => {
-  const response = await api.get<ApiPaginationResponse<FetchedReviewResponse>>(`/review/get_list`, {params: {product_id}});
+  const response = await api.get<ApiPaginationResponse<FetchedReviewResponse>>(`/review/get-list`, {params: {product_id}});
   return response.data;
 });
 
 export const getReviewsWithUserNames = createAsyncThunk<ApiPaginationResponse<FetchedReviewResponse>, {product_id: number}>('review/getReviewsWithUserNames', async ({product_id}) => {
-  const response = await api.get<ApiPaginationResponse<FetchedReviewResponse>>(`/review/get_reviews_with_user_names`, {params: {product_id}});
+  const response = await api.get<ApiPaginationResponse<FetchedReviewResponse>>(`/review/get-reviews-with-user-names`, {params: {product_id}});
   return response.data;
 });
 

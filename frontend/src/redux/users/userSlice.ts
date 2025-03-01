@@ -11,18 +11,29 @@ const initialState: UserState = {
   isSignin: false,
   address: null,
   addresses: [],
+  isLoading: false,
 };
 
-export const signup = createAsyncThunk<ApiResponse<User>, {formData: Auth}>('user/signup', async ({formData}) => {
-  await api_initial.get("/sanctum/csrf-cookie");
-  const response = await api.post<ApiResponse<User>>(`/signup`, formData);
-  return response.data;
+export const signup = createAsyncThunk<ApiResponse<User>, {formData: Auth}>('user/signup', async ({formData}, {rejectWithValue}) => {
+  try {
+    await api_initial.get("/sanctum/csrf-cookie");
+    const response = await api.post<ApiResponse<User>>(`/signup`, formData);
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || 'Authentication failed';
+    return rejectWithValue(errorMessage);
+  }
 });
 
-export const signin = createAsyncThunk<ApiResponse<User>, {formData: Signin}>('user/signin', async ({formData}) => {
-  await api_initial.get("/sanctum/csrf-cookie");
-  const response = await api.post<ApiResponse<User>>(`/signin`, formData);
-  return response.data;
+export const signin = createAsyncThunk<ApiResponse<User>, {formData: Signin}>('user/signin', async ({formData}, {rejectWithValue}) => {
+  try {
+    await api_initial.get("/sanctum/csrf-cookie");
+    const response = await api.post<ApiResponse<User>>(`/signin`, formData);
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || 'Authentication failed';
+    return rejectWithValue(errorMessage);
+  }
 });
 
 export const signout = createAsyncThunk<void>('user/signout', async () => {
@@ -31,11 +42,21 @@ export const signout = createAsyncThunk<void>('user/signout', async () => {
 
 export const fetchUser = createAsyncThunk<ApiResponse<User> | null, void>(
   'user/fetchUser',
-  async () => {
-    const response = await api.get<ApiResponse<User>>('/fetch_user');
-    return response.data;
+  async (_, {rejectWithValue}) => {
+    try {
+      const response = await api.get<ApiResponse<User>>('/fetch-user');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(null);
+    }
   }
 );
+
+export const createGuestUser = createAsyncThunk<ApiResponse<number>, void>(
+  'user/createGuestUser', async () => {
+  const response = await api.post<ApiResponse<number>>(`/guest-user`);
+  return response.data;
+});
 
 export const updateUser = createAsyncThunk<ApiResponse<User>, {id: number, formData: UpdateUserState}>(
   'user/updateUser', async ({id, formData}) => {
@@ -90,6 +111,12 @@ export const userSlice = createSlice({
         user: action.payload,
       }
     },
+    setIsLoading: (state, action: PayloadAction<boolean>) => {
+      return {
+        ...state,
+        isLoading: action.payload,
+      }
+    },
     setDefaultAddress: (state, action: PayloadAction<{id: number, is_default: boolean}>) => {
       const address = state.addresses.find(addr => addr.id === action.payload.id);
       if (address) {
@@ -116,19 +143,31 @@ export const userSlice = createSlice({
           }
         }
       })
+      .addCase(signin.rejected, (state) => {
+        state.user = null;
+        state.isSignin = false;
+      })
       .addCase(signout.fulfilled, (state) => {
         state.user = null;
         state.isSignin = false;
+      })
+      .addCase(createGuestUser.fulfilled, (state, action) => {
+        if (action.payload.data) {
+          state.guest_id = action.payload.data;
+        }
       })
       .addCase(fetchUser.fulfilled, (state, action) => {
         if (action.payload) {
           if (action.payload.data) {
             state.user = action.payload.data;
             state.isSignin = true;
-          } else {
-            state.user = null;
-            state.isSignin = false;
           }
+        }
+      })
+      .addCase(fetchUser.rejected, (state, action) => {
+        if (action.payload) {
+          state.user = null;
+          state.isSignin = false;
         }
       })
       .addCase(updateUser.fulfilled, (state, action) => {
@@ -171,7 +210,6 @@ export const userSlice = createSlice({
   },
 });
 
-export const { setUser, setDefaultAddress } = userSlice.actions;
+export const { setUser, setIsLoading, setDefaultAddress } = userSlice.actions;
 
 export default userSlice.reducer;
-

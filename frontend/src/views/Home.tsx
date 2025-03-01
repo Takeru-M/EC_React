@@ -10,7 +10,6 @@ import { fetchProducts, setIsLoading } from '../redux/products/productSlice';
 import type { AppDispatch, RootState } from '../redux';
 import { Product } from '../redux/products/type';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../constants/product';
-import { fetchCarts } from '../redux/carts/cartSlice';
 import LoadingScreen from '../components/Common/Loading';
 import { setSelectedCategory } from '../redux/categories/categorySlice';
 
@@ -24,7 +23,6 @@ const Home = () => {
   const total = useSelector((state: RootState) => state.product.total);
   const per_page = useSelector((state: RootState) => state.product.per_page);
   const current_page = useSelector((state: RootState) => state.product.current_page);
-  const user = useSelector((state: RootState) => state.user.user);
   const isLoading = useSelector((state: RootState) => state.product.isLoading);
 
   useEffect(() => {
@@ -37,17 +35,11 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    if (user?.id) {
-      dispatch(fetchCarts({user_id: user.id, page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
-    }
-  }, []);
-
-  useEffect(() => {
     dispatch(setSelectedCategory(0));
   }, []);
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, newPage: number) => {
-    // dispatch(fetchProducts({ page: newPage, page_size: DEFAULT_PAGE_SIZE }));
+    dispatch(fetchProducts({ page: newPage, page_size: DEFAULT_PAGE_SIZE }));
   };
 
   const gotoProduct = (product: Product) => {

@@ -255,7 +255,7 @@ const Account = () => {
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-              <Avatar
+              {/* <Avatar
                 sx={{
                   width: 100,
                   height: 100,
@@ -264,10 +264,10 @@ const Account = () => {
                 }}
               >
                 {formData.first_name?.[0]?.toUpperCase() || 'U'}
-              </Avatar>
+              </Avatar> */}
               <Box sx={{ ml: 3 }}>
                 <Typography variant="h4" gutterBottom>
-                  {`${formData.first_name} ${formData.last_name}`}
+                  {`${formData.login_name}`}
                 </Typography>
               </Box>
             </Box>

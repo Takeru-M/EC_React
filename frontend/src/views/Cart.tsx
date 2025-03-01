@@ -20,7 +20,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useNavigate } from 'react-router-dom';
 import type { RootState, AppDispatch } from '../redux';
 import { CartResponse } from '../redux/carts/type';
-import { fetchCarts, removeFromCart, setIsLoading, updateQuantity } from '../redux/carts/cartSlice';
+import { fetchCarts, fetchCartsForGuest, removeFromCart, setIsLoading, updateQuantity } from '../redux/carts/cartSlice';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../constants/constants';
 import LoadingScreen from '../components/Common/Loading';
 
@@ -42,22 +42,26 @@ const CartPage = () => {
         .finally(() => {
           dispatch(setIsLoading(false));
         });
-    }
-  }, []);
-
-  const handleRemoveFromCart = (cart_id: number) => {
-    if (user_id) {
-      dispatch(removeFromCart({
-        cart_id: cart_id
-      }))
+    } else {
+      dispatch(setIsLoading(true));
+      dispatch(fetchCartsForGuest({page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}))
         .unwrap()
-        .then(() => {
-          dispatch(fetchCarts({user_id: user_id, page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
+        .finally(() => {
+          dispatch(setIsLoading(false));
         });
+    }
+  }, [user_id]);
+
+  const handleRemoveFromCart = async (cart_id: number) => {
+    await dispatch(removeFromCart({cart_id: cart_id}))
+    if (user_id) {
+      dispatch(fetchCarts({user_id: user_id as number, page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
+    } else {
+      dispatch(fetchCartsForGuest({page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
     }
   };
 
-  // TODO: Change the value in database after finishing actions
+  // TODO: Change the value in database after finishing actions(Efficiency)
   const handleQuantityChange = (cart_id: number, newQuantity: string) => {
     const quantity = Number(newQuantity);
     dispatch(updateQuantity({
@@ -67,7 +71,11 @@ const CartPage = () => {
   };
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, newPage: number) => {
-    // dispatch(fetchProducts({ page: newPage, page_size: DEFAULT_PAGE_SIZE }));
+    if (user_id) {
+      dispatch(fetchCarts({user_id: user_id, page: newPage, page_size: DEFAULT_PAGE_SIZE}));
+    } else {
+      dispatch(fetchCartsForGuest({page: newPage, page_size: DEFAULT_PAGE_SIZE}));
+    }
   };
 
   const handleCheckout = () => {

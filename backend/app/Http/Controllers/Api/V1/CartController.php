@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Services\CartService;
-use App\Models\User;
+use Illuminate\Support\Facades\Cookie;
+
 class CartController extends Controller
 {
     private $cartService;
@@ -86,5 +87,36 @@ class CartController extends Controller
         $params = $request->all();
         $data = $this->cartService->fetchCarts($params);
         return response()->json(['data' => $data['data'], 'total' => $data['total'], 'per_page' => $data['per_page'], 'current_page' => $data['current_page']], 200);
+    }
+
+    public function fetchCartsForGuest(Request $request)
+    {
+        $id = $request->cookie('guest_id');
+        $params = $request->all();
+        $params['guest_id'] = $id;
+        $data = $this->cartService->fetchCartsForGuest($params);
+        return response()->json(['data' => $data['data'], 'total' => $data['total'], 'per_page' => $data['per_page'], 'current_page' => $data['current_page']], 200);
+    }
+
+    public function storeForGuest(Request $request)
+    {
+        $id = $request->cookie('guest_id');
+        $params = $request->all();
+        $params['guest_id'] = $id;
+        $data = $this->cartService->createForGuest($params);
+        return response()->json(['data' => $data], 201);
+    }
+
+    public function integrateCart(Request $request)
+    {
+      try {
+        $id = $request->cookie('guest_id');
+        $params = $request->all();
+        $params['guest_id'] = $id;
+        $this->cartService->integrateCart($params);
+        return response()->noContent(200)->withCookie(Cookie::forget('guest_id'));
+      } catch (\Exception $e) {
+        return response()->json(['message' => $e->getMessage()], 500);
+      }
     }
 }

@@ -17,8 +17,10 @@ export interface UserState {
   users: User[];
   user: User | null;
   isSignin: boolean;
+  guest_id?: number;
   address: Address | null;
   addresses: Address[];
+  isLoading: boolean;
 };
 
 export interface UpdateUserState {
