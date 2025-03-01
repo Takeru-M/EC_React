@@ -15,6 +15,7 @@ import Favorite from './views/Favorite';
 import Cart from './views/Cart'
 import Header from './components/Header/Header';
 import Payment from './views/Payment';
+import Loading from './views/Common/Loading';
 import NotFound from './views/Common/NotFound';
 import './App.css';
 import { useEffect } from 'react';
@@ -54,6 +55,7 @@ function App() {
           <Route path="/cart" element={<Cart />} />
           {/* <Route path="/order_history" element={<OrderHistory />} /> */}
           <Route path="/payment" element={<Payment />} />
+          <Route path="/loading" element={<Loading />} />
           <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

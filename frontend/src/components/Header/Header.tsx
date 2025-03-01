@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Title } from '../../constants/header';
 import { useTranslation } from "react-i18next";
+import { toast } from 'react-toastify';
 import {
   AppBar,
   Toolbar,
@@ -108,6 +109,7 @@ const Header = () => {
   const isSignin = useSelector((state: RootState) => state.user.isSignin);
   const selectedCategory = useSelector((state: RootState) => state.category.selectedCategory);
   const user = useSelector((state: RootState) => state.user.user);
+  const isLoadingForSignIn = useSelector((state: RootState) => state.user.isLoading);
 
   useEffect(() => {
     dispatch(fetchCategories());
@@ -164,20 +166,19 @@ const Header = () => {
   }
 
   const Signout = async () => {
-    await dispatch(signout());
-    await dispatch(clearCart());
-    await dispatch(createGuestUser());
-    navigate(location.pathname);
-    toast.success('Sign out successful');
+    localStorage.setItem('prevPath', location.pathname);
+    dispatch(setIsLoading(true));
+    await dispatch(signout())
+    navigate('/loading');
+    await Promise.all([
+      dispatch(clearCart()),
+      dispatch(createGuestUser()),
+    ])
+    .then(() => {
+      dispatch(setIsLoading(false));
+      toast.success('Sign out successful');
+    });
   }
-
-  // const categories = [
-  //   {id: 1, label: 'All Categories'},
-  //   {id: 2, label: 'Electronics'},
-  //   {id: 3, label: "Men's Clothing"},
-  //   {id: 4, label: "Women's Clothing"},
-  //   {id: 5, label: "Jewelery"},
-  // ];
 
   return (
     <AppBar position="static">
