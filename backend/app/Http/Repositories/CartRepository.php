@@ -76,10 +76,21 @@ class CartRepository
   {
     $page = (int) $params['page'];
     $page_size = (int) $params['page_size'];
+    $guest_id = $params['guest_id'] ?? null;
+
+    if (!$guest_id) {
+      return [
+        'data' => [],
+        'total' => 0,
+        'per_page' => $page_size,
+        'current_page' => $page,
+      ];
+    }
 
     $query = Cart::query();
 
-    $query->where('guest_id', $params['guest_id'])
+    $query->where('guest_id', $guest_id)
+      ->whereNotNull('guest_id')
       ->with('product');
 
     $total = $query->count();

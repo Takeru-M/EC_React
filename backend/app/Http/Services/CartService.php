@@ -69,6 +69,10 @@ class CartService
     $response = $this->cartRepo->fetchCartsForGuest($params);
     $carts = $response['data'];
 
+    if ($response['total'] === 0) {
+      return $response;
+    }
+
     $data['data'] = $carts->map(function ($cart) {
       return [
         'id' => $cart->id,
