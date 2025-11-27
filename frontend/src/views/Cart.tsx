@@ -20,9 +20,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useNavigate } from 'react-router-dom';
 import type { RootState, AppDispatch } from '../redux';
 import { CartResponse } from '../redux/carts/type';
-import { fetchCarts, fetchCartsForGuest, removeFromCart, setIsLoading, updateQuantity } from '../redux/carts/cartSlice';
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../constants/constants';
+import { fetchCarts, fetchCartsForGuest, removeFromCart, setIsLoading, setSubTotal, updateQuantity } from '../redux/carts/cartSlice';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, TAX_RATE, DEFUALT_SHIPPING_COST } from '../constants/constants';
 import LoadingScreen from '../components/Common/Loading';
+import { setIsLoading as setIsLoadingForPayment } from '../redux/users/userSlice';
 
 const CartPage = () => {
   const navigate = useNavigate();
@@ -78,11 +79,16 @@ const CartPage = () => {
     }
   };
 
+  // TODO: Implement the function to calculate the shipping cost
+  const shipping_cost = DEFUALT_SHIPPING_COST;
+  const sub_total = carts.reduce((total, cart) => total + (cart.total_price), 0);
+  const total_price= sub_total * (1 + TAX_RATE) + shipping_cost;
+
   const handleCheckout = () => {
+    dispatch(setIsLoadingForPayment(true));
+    dispatch(setSubTotal(sub_total));
     navigate('/payment');
   };
-
-  const total_price = carts.reduce((total, cart) => total + (cart.total_price), 0);
 
   return (
     <>
@@ -153,7 +159,7 @@ const CartPage = () => {
                             sx={{ width: 100 }}
                           />
                           <Typography variant="body1" sx={{ ml: 2 }}>
-                            ${cart.total_price}
+                            ${(cart.total_price * (1 + TAX_RATE)).toFixed(2)}
                           </Typography>
                         </Box>
                         <IconButton
@@ -189,11 +195,11 @@ const CartPage = () => {
                   <Box sx={{ my: 2 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                       <Typography>Subtotal</Typography>
-                      <Typography>${total_price.toFixed(2)}</Typography>
+                      <Typography>${(sub_total * (1 + TAX_RATE)).toFixed(2)}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                       <Typography>Shipping</Typography>
-                      <Typography>Free</Typography>
+                      <Typography>${shipping_cost}</Typography>
                     </Box>
                     <Divider sx={{ my: 2 }} />
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>

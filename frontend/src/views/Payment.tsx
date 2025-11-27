@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 import { api } from "../constants/axios";
@@ -24,12 +24,27 @@ import {
   RadioGroup,
   FormControlLabel,
   FormControl,
-  IconButton
+  IconButton,
+  Switch,
+  MenuItem
 } from "@mui/material";
 import EditIcon from '@mui/icons-material/Edit';
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../redux";
+import { useNavigate } from "react-router-dom";
+import { ORDER_STATUS, TAX_RATE } from "../constants/constants";
+import { Address } from "../redux/users/type";
+import { createAddress, fetchAddresses, setIsLoading } from "../redux/users/userSlice";
+import LoadingScreen from "../components/Common/Loading";
+import { defaultAddress as defaultAddressData } from "../redux/users/type";
+import { OrderTablePayload, OrderItemsPayload, Order } from "../redux/orders/type";
+// import { createOrder, createOrderItems } from "../redux/orders/orderSlice";
+import { clearCart, setIsLoading as setCartIsLoading } from "../redux/carts/cartSlice";
 
 // const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 const stripePromise = loadStripe("pk_test_51Qvk3oFj5qxoG818hojLuE2QA2APokm9lj8blRjVk8VHBzqr7YE6bYemNhFK5MqnP5VCjQoko67jJmg8ZxG1VuOK008QTTFBCs");
+
+const countries = ['United States', 'Canada', 'United Kingdom', 'Japan', 'Germany'];
 
 interface AddressData {
   street: string;
@@ -40,24 +55,24 @@ interface AddressData {
 }
 
 // Mock default address - In a real app, this would come from your backend
-const defaultAddress: AddressData = {
-  street: "123 Main St",
-  city: "San Francisco",
-  state: "CA",
-  zipCode: "94105",
-  country: "USA"
-};
+// const defaultAddress: AddressData = {
+//   street: "123 Main St",
+//   city: "San Francisco",
+//   state: "CA",
+//   zipCode: "94105",
+//   country: "USA"
+// };
 
-const PriceBreakdown = () => {
-  const subtotal = 10.00;
-  const tax = subtotal * 0.1; // 10% tax
-  const total = subtotal + tax;
-
+const PriceBreakdown = ({ sub_total, tax, total_price }: { 
+  sub_total: number; 
+  tax: number; 
+  total_price: number; 
+}) => {
   return (
     <List>
       <ListItem>
         <ListItemText primary="Subtotal" />
-        <Typography>${subtotal.toFixed(2)}</Typography>
+        <Typography>${sub_total.toFixed(2)}</Typography>
       </ListItem>
       <ListItem>
         <ListItemText primary="Tax (10%)" />
@@ -66,36 +81,63 @@ const PriceBreakdown = () => {
       <Divider />
       <ListItem>
         <ListItemText primary={<Typography variant="h6">Total</Typography>} />
-        <Typography variant="h6">${total.toFixed(2)}</Typography>
+        <Typography variant="h6">${total_price.toFixed(2)}</Typography>
       </ListItem>
     </List>
   );
 };
 
-const AddressDisplay = ({ address }: { address: AddressData }) => (
+const AddressDisplay = ({ address }: { address: Address }) => (
   <Box sx={{ p: 2, bgcolor: "background.paper", borderRadius: 1, border: 1, borderColor: "divider" }}>
-    <Typography>{address.street}</Typography>
-    <Typography>{`${address.city}, ${address.state} ${address.zipCode}`}</Typography>
-    <Typography>{address.country}</Typography>
+    <Typography>{address.address}</Typography>
+    <Typography>{`${address.postal_code}, ${address.country}`}</Typography>
   </Box>
 );
 
 const CheckoutForm = () => {
   const stripe = useStripe();
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const elements = useElements();
+  const addresses = useSelector((state: RootState) => state.user.addresses);
+  const defaultAddress = addresses.find((address) => Boolean(address.is_default) === true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [address, setAddress] = useState<AddressData>(defaultAddress);
+  const [address, setAddress] = useState<Address>(defaultAddress as Address);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [addressType, setAddressType] = useState("default");
   const [showSaveAddressModal, setShowSaveAddressModal] = useState(false);
-  const [tempAddress, setTempAddress] = useState<AddressData>(defaultAddress);
+  const [errors, setErrors] = useState({});
+  const isLoading = useSelector((state: RootState) => state.user.isLoading);
+  const [formData, setFormData] = useState<Address>(defaultAddressData);
+  const user = useSelector((state: RootState) => state.user.user);
+  const cartItems = useSelector((state: RootState) => state.cart.carts);
+  const sub_total = useSelector((state: RootState) => state.cart.sub_total);
+  const tax = sub_total * TAX_RATE;
+  const total_price = sub_total + tax;
 
-  const handleAddressChange = (field: keyof AddressData) => (
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchAddresses({id: user.id}))
+      .unwrap()
+      .then(() => {
+        dispatch(setIsLoading(false));
+      });
+    }
+    dispatch(setIsLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setIsEditingAddress(true);
+    }
+  }, [user]);
+
+  const handleAddressChange = (field: keyof Address) => (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setTempAddress(prev => ({
+    setFormData(prev => ({
       ...prev,
       [field]: e.target.value
     }));
@@ -104,8 +146,7 @@ const CheckoutForm = () => {
   const handleAddressTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setAddressType(event.target.value);
     if (event.target.value === "default") {
-      setAddress(defaultAddress);
-      setTempAddress(defaultAddress);
+      setAddress(address);
       setIsEditingAddress(false);
     } else {
       setIsEditingAddress(true);
@@ -114,13 +155,21 @@ const CheckoutForm = () => {
 
   const handleSaveAddress = () => {
     // Here you would typically save the address to your backend
-    setAddress(tempAddress);
+    setAddress(formData);
     setShowSaveAddressModal(false);
     setIsEditingAddress(false);
+    dispatch(createAddress({formData}));
   };
 
+  //TODO: 頑張る
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    handlePayment(e);
+    handleOrder(e);
+  };
+
+  const handlePayment = async (e: React.FormEvent) => {
+    // e.preventDefault();
     setLoading(true);
     setError("");
     setSuccess(false);
@@ -150,11 +199,8 @@ const CheckoutForm = () => {
           card: cardElement,
           billing_details: {
             address: {
-              line1: address.street,
-              city: address.city,
-              state: address.state,
-              postal_code: address.zipCode,
-              country: address.country
+              country: address.country,
+              postal_code: address.postal_code,
             }
           }
         }
@@ -172,164 +218,246 @@ const CheckoutForm = () => {
     setLoading(false);
   };
 
+  // defaultAdressの時はdefaultAddressを，それ以外の時はformDataを使用する
+  // userと非userを意識する
+  const handleOrder = async (e: React.FormEvent) => {
+    dispatch(setCartIsLoading(true));
+    if (user && !isEditingAddress) {
+      // ユーザかつdefaultAdress
+      const OrderTablePayload: OrderTablePayload = {
+        user: user,
+        address: defaultAddress?.address,
+        // TODO: Implement the function to calculate the shipping fee
+        shipping_fee: 0,
+        total_price: total_price,
+        status: ORDER_STATUS.PAID,
+      };
+      const orderResponse: Order = await dispatch(createOrder(OrderTablePayload))
+        .unwrap()
+        .then(() => {
+          if (orderResponse.id) {
+            // orderd_itemsに登録（商品情報）
+            const orderItemsPayload: OrderItemsPayload = {
+              order_id: orderResponse.id,
+              products: cartItems,
+            };
+            try {
+              dispatch()
+              .unwrap()
+              .then(() => {
+                dispatch(setCartIsLoading(false));
+                  navigate('/order/complete');
+                  dispatch(clearCart());
+                  // メール送信
+              });
+            } catch (error) {
+              console.error("Error creating order items:", error);
+            }
+          }
+        });
+    } else if (user && isEditingAddress) {
+      // ユーザかつ新規アドレス
+    } else if (isEditingAddress) {
+      // 非ユーザかつ新規アドレス
+    }
+  };
+
   return (
-    <Container maxWidth="md" sx={{ mt: 5, mb: 5 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom align="center" sx={{ mb: 4 }}>
-          Checkout
-        </Typography>
-
-        <Grid container spacing={4}>
-          {/* Left side - Address and Payment Form */}
-          <Grid item xs={12} md={8}>
-            <Typography variant="h6" gutterBottom>
-              Shipping Address
+    <>
+      {isLoading ? (
+        <LoadingScreen message="Loading..." />
+        ) : (
+        <Container maxWidth="md" sx={{ mt: 5, mb: 5 }}>
+          <Paper elevation={3} sx={{ p: 4 }}>
+            <Typography variant="h4" gutterBottom align="center" sx={{ mb: 4 }}>
+              Checkout
             </Typography>
-            <form onSubmit={handleSubmit}>
-              <FormControl component="fieldset" sx={{ mb: 2 }}>
-                <RadioGroup
-                  value={addressType}
-                  onChange={handleAddressTypeChange}
-                >
-                  <FormControlLabel 
-                    value="default" 
-                    control={<Radio />} 
-                    label="Use default address"
-                  />
-                  <Box sx={{ ml: 4, mb: 2 }}>
-                    {addressType === "default" && <AddressDisplay address={defaultAddress} />}
-                  </Box>
-                  <FormControlLabel 
-                    value="new" 
-                    control={<Radio />} 
-                    label="Use a different address" 
-                  />
-                </RadioGroup>
-              </FormControl>
 
-              {isEditingAddress && (
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Street Address"
-                      value={tempAddress.street}
-                      onChange={handleAddressChange("street")}
-                      required
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="City"
-                      value={tempAddress.city}
-                      onChange={handleAddressChange("city")}
-                      required
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="State"
-                      value={tempAddress.state}
-                      onChange={handleAddressChange("state")}
-                      required
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="ZIP Code"
-                      value={tempAddress.zipCode}
-                      onChange={handleAddressChange("zipCode")}
-                      required
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="Country"
-                      value={tempAddress.country}
-                      onChange={handleAddressChange("country")}
-                      required
-                    />
-                  </Grid>
-                </Grid>
-              )}
+            <Grid container spacing={4}>
+              {/* Left side - Address and Payment Form */}
+              <Grid item xs={12} md={8}>
+                <Typography variant="h6" gutterBottom>
+                  Shipping Address
+                </Typography>
+                <form onSubmit={handleSubmit}>
+                  {user?.id ? (
+                    <FormControl component="fieldset" sx={{ mb: 2 }}>
+                      <RadioGroup
+                        value={addressType}
+                        onChange={handleAddressTypeChange}
+                      >
+                        <FormControlLabel 
+                          value="default" 
+                          control={<Radio />} 
+                          label="Use default address"
+                        />
+                        <Box sx={{ ml: 4, mb: 2 }}>
+                          {<AddressDisplay address={defaultAddress as Address} />}
+                        </Box>
+                        <FormControlLabel 
+                          value="new" 
+                          control={<Radio />} 
+                          label="Use a different address" 
+                        />
+                      </RadioGroup>
+                    </FormControl>
+                  ) : (
+                    <Typography sx={{ mb: 2 }}></Typography>
+                  )}
 
-              <Typography variant="h6" gutterBottom sx={{ mt: 4, mb: 2 }}>
-                Payment Details
-              </Typography>
-              <Box sx={{ mb: 3, p: 2, borderRadius: 1, bgcolor: "background.paper", border: 1, borderColor: "divider" }}>
-                <CardElement options={{ 
-                  hidePostalCode: true,
-                  style: {
-                    base: {
-                      fontSize: '16px',
-                      color: '#424770',
-                      '::placeholder': {
-                        color: '#aab7c4',
+                  {isEditingAddress && (
+                    <Grid container spacing={2}>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12}>
+                          <TextField
+                            fullWidth
+                            label="Name *"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleAddressChange('name')}
+                            error={!!errors.name}
+                            helperText={errors.name || ''}
+                            required
+                            placeholder="John Doe"
+                          />
+                        </Grid>
+                        <Grid item xs={12}>
+                          <TextField
+                            fullWidth
+                            label="Postal Code *"
+                            name="postal_code"
+                            value={formData.postal_code}
+                            onChange={handleAddressChange('postal_code')}
+                            error={!!errors.postal_code}
+                            helperText={errors.postal_code || 'Enter without hyphens'}
+                            required
+                            placeholder="1000001"
+                          />
+                        </Grid>
+                        <Grid item xs={12}>
+                          <TextField
+                            fullWidth
+                            label="Address *"
+                            name="address"
+                            value={formData.address}
+                            onChange={handleAddressChange('address')}
+                            error={!!errors.address}
+                            helperText={errors.address || ''}
+                            required
+                            placeholder="123 Main St, Apt 4B"
+                          />
+                        </Grid>
+                        <Grid item xs={12}>
+                          <TextField
+                            select
+                            fullWidth
+                            label="Country *"
+                            name="country"
+                            value={formData.country}
+                            onChange={handleAddressChange('country')}
+                            error={!!errors.country}
+                            helperText={errors.country || ''}
+                            required
+                          >
+                            {countries.map((country) => (
+                              <MenuItem key={country} value={country}>
+                                {country}
+                              </MenuItem>
+                            ))}
+                          </TextField>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <TextField
+                            fullWidth
+                            label="Phone Number *"
+                            name="phone_number"
+                            value={formData.phone_number}
+                            onChange={handleAddressChange('phone_number')}
+                            error={!!errors.phone_number}
+                            helperText={errors.phone_number || 'Enter without hyphens'}
+                            required
+                            placeholder="08012345678"
+                          />
+                        </Grid>
+                      </Grid>
+                    </Grid>
+                  )}
+
+                  <Typography variant="h6" gutterBottom sx={{ mt: 4, mb: 2 }}>
+                    Payment Details
+                  </Typography>
+                  <Box sx={{ mb: 3, p: 2, borderRadius: 1, bgcolor: "background.paper", border: 1, borderColor: "divider" }}>
+                    <CardElement options={{ 
+                      hidePostalCode: true,
+                      style: {
+                        base: {
+                          fontSize: '16px',
+                          color: '#424770',
+                          '::placeholder': {
+                            color: '#aab7c4',
+                          },
+                        },
+                        invalid: {
+                          color: '#9e2146',
+                        },
                       },
-                    },
-                    invalid: {
-                      color: '#9e2146',
-                    },
-                  },
-                }} />
-              </Box>
+                    }} />
+                  </Box>
 
-              <Button
-                variant="contained"
-                color="primary"
-                type="submit"
-                fullWidth
-                disabled={!stripe || loading}
-                sx={{ mt: 2 }}
-                size="large"
-              >
-                {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Complete Purchase"}
-              </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    type="submit"
+                    fullWidth
+                    disabled={!stripe || loading}
+                    sx={{ mt: 2 }}
+                    size="large"
+                  >
+                    {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Complete Purchase"}
+                  </Button>
 
-              {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-              {success && <Alert severity="success" sx={{ mt: 2 }}>Payment successful! Thank you for your purchase.</Alert>}
-            </form>
-          </Grid>
+                  {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+                  {success && <Alert severity="success" sx={{ mt: 2 }}>Payment successful! Thank you for your purchase.</Alert>}
+                </form>
+              </Grid>
 
-          {/* Right side - Order Summary */}
-          <Grid item xs={12} md={4}>
-            <Paper elevation={2} sx={{ p: 3, bgcolor: "grey.50" }}>
-              <Typography variant="h6" gutterBottom>
-                Order Summary
+              {/* Right side - Order Summary */}
+              <Grid item xs={12} md={4}>
+                <Paper elevation={2} sx={{ p: 3, bgcolor: "grey.50" }}>
+                  <Typography variant="h6" gutterBottom>
+                    Order Summary
+                  </Typography>
+                  <PriceBreakdown sub_total={sub_total} tax={tax} total_price={total_price} />
+                </Paper>
+              </Grid>
+            </Grid>
+          </Paper>
+
+          {/* Save Address Modal */}
+          <Dialog open={showSaveAddressModal} onClose={() => setShowSaveAddressModal(false)}>
+            <DialogTitle>Save New Address</DialogTitle>
+            <DialogContent>
+              <Typography>
+                Would you like to save this address for future purchases?
               </Typography>
-              <PriceBreakdown />
-            </Paper>
-          </Grid>
-        </Grid>
-      </Paper>
-
-      {/* Save Address Modal */}
-      <Dialog open={showSaveAddressModal} onClose={() => setShowSaveAddressModal(false)}>
-        <DialogTitle>Save New Address</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Would you like to save this address for future purchases?
-          </Typography>
-          <AddressDisplay address={tempAddress} />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => {
-            setAddress(tempAddress);
-            setShowSaveAddressModal(false);
-            handleSubmit(new Event('submit') as any);
-          }}>
-            No, just use for this purchase
-          </Button>
-          <Button onClick={handleSaveAddress} variant="contained" color="primary">
-            Yes, save address
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+              <AddressDisplay address={formData} />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => {
+                setAddress(formData);
+                setShowSaveAddressModal(false);
+                handleSubmit(new Event('submit') as any);
+              }}>
+                No, just use for this purchase
+              </Button>
+              <Button onClick={handleSaveAddress} variant="contained" color="primary">
+                Yes, save address
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </Container>
+      )}
+    </>
   );
 };
 

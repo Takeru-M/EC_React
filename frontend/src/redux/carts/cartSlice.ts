@@ -15,12 +15,8 @@ const initialState: CartState = {
   per_page: DEFAULT_PAGE_SIZE,
   current_page: DEFAULT_PAGE,
   isLoading: false,
+  sub_total: 0,
 };
-
-// export const getCarts = createAsyncThunk<ApiResponse<Cart[]>, {user_id: number}>('cart/getCarts', async ({user_id}) => {
-//   const response = await api.get<ApiResponse<Cart[]>>(`/cart/${user_id}`);
-//   return response.data;
-// });
 
 export const fetchCarts = createAsyncThunk<ApiPaginationResponse<CartResponse>, {user_id: number, page: number, page_size: number}>('cart/fetchCarts', async ({user_id, page, page_size}) => {
   const response = await api.get<ApiPaginationResponse<CartResponse>>(`/cart/fetch-carts`, {params: {user_id, page, page_size}});
@@ -71,6 +67,9 @@ const cartSlice = createSlice({
       state.total = 0;
       state.per_page = DEFAULT_PAGE_SIZE;
       state.current_page = DEFAULT_PAGE;
+    },
+    setSubTotal: (state, action: PayloadAction<number>) => {
+      state.sub_total = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -139,6 +138,6 @@ const cartSlice = createSlice({
 });
 
 // export const { updateCartQuantity } = cartSlice.actions;
-export const { setIsLoading, clearCart } = cartSlice.actions;
+export const { setIsLoading, clearCart, setSubTotal } = cartSlice.actions;
 
 export default cartSlice.reducer;

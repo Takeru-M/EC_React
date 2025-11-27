@@ -31,7 +31,7 @@ export const registerProduct = createAsyncThunk<ApiResponse<Product>, Partial<Pr
 });
 
 export const searchProducts = createAsyncThunk<ApiPaginationResponse<Product>, {searchTerm: string, category_id: number, page: number, page_size: number}>('product/searchProducts', async ({searchTerm, category_id, page, page_size}) => {
-  const response = await api.get<ApiPaginationResponse<Product>>(`/search`, {params: {searchTerm, category_id, page, page_size}});
+  const response = await api.get<ApiPaginationResponse<Product>>(`/product/search`, {params: {searchTerm, category_id, page, page_size}});
   return response.data;
 });
 

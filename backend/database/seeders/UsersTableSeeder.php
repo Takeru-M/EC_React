@@ -16,7 +16,6 @@ class UsersTableSeeder extends Seeder
   {
     // Create admin user
     User::create([
-      'login_name' => 'sample',
       'first_name' => 'サンプル',
       'last_name' => 'サンプル',
       'first_name_kana' => 'サンプル',

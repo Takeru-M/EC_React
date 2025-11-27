@@ -15,6 +15,7 @@ import Favorite from './views/Favorite';
 import Cart from './views/Cart'
 import Header from './components/Header/Header';
 import Payment from './views/Payment';
+import OrderComplete from './views/OrderComplete';
 import Loading from './views/Common/Loading';
 import NotFound from './views/Common/NotFound';
 import './App.css';
@@ -53,8 +54,9 @@ function App() {
           <Route path="/account" element={<Account />} />
           <Route path="/favorite" element={<Favorite />} />
           <Route path="/cart" element={<Cart />} />
-          {/* <Route path="/order_history" element={<OrderHistory />} /> */}
+          {/* <Route path="/order/history" element={<OrderHistory />} /> */}
           <Route path="/payment" element={<Payment />} />
+          <Route path="/order/complete" element={<OrderComplete />} />
           <Route path="/loading" element={<Loading />} />
           <Route path="*" element={<NotFound />} />
           </Routes>

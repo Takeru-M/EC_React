@@ -15,6 +15,7 @@ export interface CartState {
   per_page: number;
   current_page: number;
   isLoading: boolean;
+  sub_total: number;
 }
 
 export interface CartResponse {

@@ -8,6 +8,7 @@ import {
   Box,
 } from '@mui/material';
 import { Product } from '../../redux/products/type';
+import { TAX_RATE } from '../../constants/constants';
 
 interface ProductProps {
   product: Product;
@@ -34,7 +35,7 @@ const ProductCard: React.FC<ProductProps> = ({ product }) => {
         </Typography>
         <Box sx={{ mt: 'auto' }}>
           <Typography variant="h6" color="primary" sx={{ mb: 1 }}>
-            ${product.price.toFixed(2)}
+            ${(product.price * (1 + TAX_RATE)).toFixed(2)}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <Rating value={product.rating.rate} precision={0.5} readOnly />

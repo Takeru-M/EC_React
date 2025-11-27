@@ -35,11 +35,12 @@ import { AppDispatch } from '../redux';
 import type { RootState } from '../redux';
 import { DEFAULT_OPTION_OF_ITEM_TO_BUY } from '../constants/product';
 import { addToCart, addToCartForGuest } from '../redux/carts/cartSlice';
-import { addToFavorite, removeFromFavorite, fetchFavorites, addToFavoriteForGuest, removeFromFavoriteForGuest, fetchFavoritesForGuest } from '../redux/favorites/favoriteSlice';
+import { addToFavorite, removeFromFavorite, fetchFavorites, addToFavoriteForGuest, fetchFavoritesForGuest } from '../redux/favorites/favoriteSlice';
 import { getReviewsWithUserNames, createReview } from '../redux/reviews/reviewSlice';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../constants/constants';
 import LoadingScreen from '../components/Common/Loading';
 import ErrorPage from '../views/Common/ErrorPage';
+import { TAX_RATE } from '../constants/constants';
 
 // Mock data for demonstration
 const PRODUCT = {
@@ -259,7 +260,7 @@ const ProductDetail = () => {
               <Grid item xs={12} md={3}>
                 <Paper sx={{ p: 2 }}>
                   <Typography variant="h4" color="primary" gutterBottom>
-                    ${product.price}
+                    ${(product.price * (1 + TAX_RATE)).toFixed(2)}
                   </Typography>
 
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>

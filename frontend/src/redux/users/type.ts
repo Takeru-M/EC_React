@@ -42,7 +42,6 @@ export interface Signin {
 }
 
 export interface Auth {
-  login_name: string;
   first_name: string;
   last_name: string;
   first_name_kana: string;
@@ -57,7 +56,8 @@ export interface Auth {
 
 export interface Address {
   id: number;
-  user_id: number;
+  user_id?: number;
+  guest_id?: number;
   name: string;
   postal_code: string;
   address: string;
@@ -69,6 +69,7 @@ export interface Address {
 export const defaultAddress: Address = {
   id: 0,
   user_id: 0,
+  guest_id: 0,
   name: '',
   postal_code: '',
   address: '',

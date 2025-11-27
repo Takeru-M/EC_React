@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Str;
 use App\Models\GuestUser;
+use Illuminate\Support\Facades\Cookie;
 
 class AuthController extends Controller
 {
@@ -20,17 +21,29 @@ class AuthController extends Controller
     $this->userService = $userService;
   }
 
+  public function ex(Request $request)
+  {
+    return $request;
+  }
+
   public function signup(Request $request)
   {
-      $requestForCreate = $request->all();
-      $requestForCreate['password'] = Hash::make($requestForCreate['password']);
-      $data = User::create($requestForCreate);
+      try {
+          $requestForCreate = $request->all();
+          $requestForCreate['password'] = Hash::make($requestForCreate['password']);
+          $data = User::create($requestForCreate);
 
-      $credentials = $request->only(['email', 'password']);
-      if (Auth::attempt($credentials)) {
-          $request->session()->regenerate();
+        $credentials = $request->only(['email', 'password']);
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerateToken();
+            $request->session()->invalidate();
+            $request->session()->regenerate();
 
-          return response()->json(['data' => $data], 200);
+            return response()->json(['data' => $data], 200)
+              ->withCookie(Cookie::forget('guest_id'));
+        }
+      } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 401);
       }
 
       //エラー処理
@@ -45,10 +58,12 @@ class AuthController extends Controller
 
     try {
       if (Auth::attempt($credentials)) {
-        // $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        $request->session()->invalidate();
         $request->session()->regenerate();
 
-        return response()->json(['data' => $data], 200);
+        return response()->json(['data' => $data], 200)
+          ->withCookie(Cookie::forget('guest_id'));
       }
       return throw new \Exception('User not authenticated');
     } catch (\Exception $e) {

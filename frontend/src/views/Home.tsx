@@ -51,32 +51,32 @@ const Home = () => {
       {isLoading ? (
         <LoadingScreen message="Loading products..." />
       ) : (
-        products.length > 0 ? (
-          <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Typography variant="h4" component="h1" gutterBottom>
-          {t('home.home_title')}
-        </Typography>
-        <Box sx={{ flexGrow: 1 }} className={styles.home_container}>
-          <Grid container spacing={3}>
-            {products?.map((product) => (
-              <Grid item key={product.id} xs={6} sm={4} md={3} onClick={() => gotoProduct(product)}>
-                <ProductItem product={product}/>
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
-
-        {/* Pagination */}
-        <Box display="flex" justifyContent="center" mt={4}>
-          <Pagination
-            count={Math.ceil(total / per_page)}
-            page={current_page}
-            onChange={handlePageChange}
-            color="primary"
-          />
+      products.length > 0 ? (
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            {t('home.home_title')}
+          </Typography>
+          <Box sx={{ flexGrow: 1 }} className={styles.home_container}>
+            <Grid container spacing={3}>
+              {products?.map((product) => (
+                <Grid item key={product.id} xs={6} sm={4} md={3} onClick={() => gotoProduct(product)}>
+                  <ProductItem product={product}/>
+                </Grid>
+              ))}
+            </Grid>
           </Box>
-          </Container>
-        ) : (
+
+          {/* Pagination */}
+          <Box display="flex" justifyContent="center" mt={4}>
+            <Pagination
+              count={Math.ceil(total / per_page)}
+              page={current_page}
+              onChange={handlePageChange}
+              color="primary"
+            />
+            </Box>
+            </Container>
+          ) : (
           <LoadingScreen message="Loading products..." />
         )
       )}

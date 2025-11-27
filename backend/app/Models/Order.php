@@ -5,12 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\OrderedItem;
+
 class Order extends Model
 {
     protected $fillable = [
+      'user_id',
+      'guest_id',
       'name',
       'address',
-      'porstal_code',
+      'postal_code',
+      'email',
       'phone_number',
       'shipping_fee',
       'total_price',
@@ -20,7 +25,6 @@ class Order extends Model
 
     protected $hidden = [
       'id',
-      'user_id'
     ];
 
     public function users(): BelongsTo
@@ -30,6 +34,6 @@ class Order extends Model
 
     public function ordereditems(): HasMany
     {
-      return $this->hasMany(OrderdItem::class);
+      return $this->hasMany(OrderedItem::class);
     }
 }

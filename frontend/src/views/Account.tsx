@@ -474,7 +474,7 @@ const Account = () => {
                     <ListItemSecondaryAction>
                       <Switch
                         edge="end"
-                        checked={address.is_default}
+                        checked={Boolean(address.is_default)}
                         onChange={() => {
                           handleSwitchChange(address.id, address.is_default);
                         }}

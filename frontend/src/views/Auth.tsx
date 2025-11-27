@@ -27,7 +27,6 @@ const Auth = () => {
   const isSignUp = location.pathname === '/signup';
 
   const [formData, setFormData] = useState({
-    login_name: '',
     first_name: '',
     last_name: '',
     first_name_kana: '',
@@ -61,6 +60,7 @@ const Auth = () => {
     e.preventDefault();
     setError('');
     dispatch(setIsLoading(true));
+    navigate('/loading');
 
     if (isSignUp) {
       if (formData.password !== formData.confirmPassword) {
@@ -69,11 +69,11 @@ const Auth = () => {
       }
 
       try {
-        const result = await dispatch(signup({formData: formData}));
-        const userId = result.payload?.data?.id;
-        await dispatch(fetchCarts({user_id: userId, page: DEFAULT_PAGE, page_size: DEFAULT_PAGE_SIZE}));
-        await dispatch(setIsLoading(false));
-        toast.success('Sign up successful');
+        await dispatch(signup({formData: formData}))
+        .then(() => {
+          dispatch(setIsLoading(false));
+          toast.success('Sign up successful');
+        });
       } catch (err) {
         // TODO: エラーメッセージを表示
         toast.error('Authentication failed. Please try again.');
@@ -82,7 +82,6 @@ const Auth = () => {
     } else {
       try {
         const result = await dispatch(signin({formData: formData}));
-        navigate('/loading');
         const userId = result.payload?.data?.id;
         await Promise.all([
           dispatch(integrateCart({user_id: userId})),
@@ -127,17 +126,6 @@ const Auth = () => {
           {isSignUp ? (
             <>
               <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField
-                    required
-                    fullWidth
-                    id="login_name"
-                    label="Login Name"
-                    name="login_name"
-                    value={formData.login_name}
-                    onChange={handleChange}
-                  />
-                </Grid>
                 <Grid item xs={12} sm={6}>
                   <TextField
                     required
@@ -145,6 +133,7 @@ const Auth = () => {
                     id="last_name"
                     label="Last Name (姓)"
                     name="last_name"
+                    placeholder="例: 山田"
                     value={formData.last_name}
                     onChange={handleChange}
                   />
@@ -156,6 +145,7 @@ const Auth = () => {
                     id="first_name"
                     label="First Name (名)"
                     name="first_name"
+                    placeholder="例: 太郎"
                     value={formData.first_name}
                     onChange={handleChange}
                   />
@@ -167,6 +157,7 @@ const Auth = () => {
                     id="last_name_kana"
                     label="Last Name Kana (セイ)"
                     name="last_name_kana"
+                    placeholder="例: ヤマダ"
                     value={formData.last_name_kana}
                     onChange={handleChange}
                   />
@@ -178,6 +169,7 @@ const Auth = () => {
                     id="first_name_kana"
                     label="First Name Kana (メイ)"
                     name="first_name_kana"
+                    placeholder="例: タロウ"
                     value={formData.first_name_kana}
                     onChange={handleChange}
                   />
@@ -189,6 +181,7 @@ const Auth = () => {
                     id="email"
                     label="Email Address"
                     name="email"
+                    placeholder="例: example@example.com"
                     autoComplete="email"
                     value={formData.email}
                     onChange={handleChange}
@@ -201,6 +194,7 @@ const Auth = () => {
                     id="phone_number"
                     label="Phone Number"
                     name="phone_number"
+                    placeholder="例: 09012345678（ハイフンなし）"
                     value={formData.phone_number}
                     onChange={handleChange}
                     inputProps={{
@@ -215,6 +209,7 @@ const Auth = () => {
                     id="postal_code"
                     label="Postal Code"
                     name="postal_code"
+                    placeholder="例: 1234567（ハイフンなし）"
                     value={formData.postal_code}
                     onChange={handleChange}
                     inputProps={{
@@ -229,6 +224,7 @@ const Auth = () => {
                     id="address"
                     label="Address"
                     name="address"
+                    placeholder="例: 東京都渋谷区1-2-3"
                     value={formData.address}
                     onChange={handleChange}
                   />
@@ -242,6 +238,7 @@ const Auth = () => {
                     type="password"
                     id="password"
                     autoComplete="new-password"
+                    placeholder="6文字以上の英数字"
                     value={formData.password}
                     onChange={handleChange}
                   />
@@ -255,6 +252,7 @@ const Auth = () => {
                     type="password"
                     id="confirmPassword"
                     autoComplete="new-password"
+                    placeholder="確認のため再入力"
                     value={formData.confirmPassword}
                     onChange={handleChange}
                   />

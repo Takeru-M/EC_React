@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\FavoriteController;
 use App\Http\Controllers\Api\V1\ReviewController;
 use App\Http\Controllers\Api\V1\CategoryController;
+use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\StripeController;
 use App\Http\Controllers\Api\V1\ShippingAddressController;
 
@@ -32,7 +33,7 @@ Route::resources([
   '/category' => CategoryController::class,
 ]);
 
-Route::get('/search', [ProductController::class, 'searchProducts']);
+Route::get('/product/search', [ProductController::class, 'searchProducts']);
 Route::resources([
   '/product' => ProductController::class,
 ]);
@@ -42,7 +43,7 @@ Route::get('/review/get-reviews-with-user-names', [ReviewController::class, 'get
 
 Route::post('/create-payment-intent', [StripeController::class, 'createPaymentIntent']);
 
-Route::post('/guest-user', [AuthController::class, 'createGuestUser']);
+Route::post('/guest-user', [AuthController::class, 'GuestUser']);
 Route::get('/fetch-user', [AuthController::class, 'fetchUser']);
 
 Route::get('/cart/guest', [CartController::class, 'fetchCartsForGuest']);
@@ -53,17 +54,22 @@ Route::get('/favorite/guest', [FavoriteController::class, 'fetchFavoritesForGues
 Route::post('/favorite/guest', [FavoriteController::class, 'storeForGuest']);
 Route::delete('/favorite', [FavoriteController::class, 'destroy']);
 
+Route::post('/handle-order', [OrderController::class, 'handleOrder']);
+
+Route::resources([
+  '/order' => OrderController::class,
+]);
+
 Route::group(['middleware' => ['auth:sanctum']], function () {
 
   Route::post('/signout', [AuthController::class, 'signout']);
 
   Route::get('/user/address', [ShippingAddressController::class, 'fetchAddresses']);
-  Route::post('/user/address', [ShippingAddressController::class, 'createAddress']);
   Route::put('/user/address', [ShippingAddressController::class, 'updateAddress']);
   Route::delete('/user/address', [ShippingAddressController::class, 'deleteAddress']);
   Route::put('/user/address/default', [ShippingAddressController::class, 'switchDefaultAddress']);
 
-  Route::put('/user/password/{user}', [UserController::class, 'updatePassword']);
+  Route::put('/password/{user}', [UserController::class, 'updatePassword']);
 
   Route::resources([
     '/user' => UserController::class,

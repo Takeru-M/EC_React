@@ -66,6 +66,20 @@ class ProductsTableSeeder extends Seeder
       ]
     ];
 
+    for ($i = 0; $i < 30; $i++) {
+      $product = [];
+      $product['name'] = chr(mt_rand(65,90)) . chr(mt_rand(65,90)) . chr(mt_rand(65,90)) .chr(mt_rand(65,90)) . chr(mt_rand(65,90)) . chr(mt_rand(65,90));
+      $product['description'] = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAA' . $i;
+      $product['price'] = rand(1000, 100000);
+      $product['stock'] = rand(10, 100);
+      $product['image'] = 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab';
+      $product['rating'] = rand(1, 5);
+      $product['created_by'] = 1;
+      $product['exist'] = true;
+
+      $products[] = $product;
+    }
+
     foreach ($products as $product) {
       Product::create($product);
     }

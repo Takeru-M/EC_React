@@ -6,7 +6,9 @@ use App\Http\Controllers\Api\V1\SigninController;
 use App\Http\Controllers\Api\V1\SignoutController;
 use App\Http\Controllers\Api\V1\AuthController;
 
-
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Route::post('/signup', [SignupController::class, 'signup']);
+// Route::post('/signin', [SigninController::class, 'signin']);

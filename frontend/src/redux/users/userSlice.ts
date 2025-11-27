@@ -16,7 +16,6 @@ const initialState: UserState = {
 
 export const signup = createAsyncThunk<ApiResponse<User>, {formData: Auth}>('user/signup', async ({formData}, {rejectWithValue}) => {
   try {
-    await api_initial.get("/sanctum/csrf-cookie");
     const response = await api.post<ApiResponse<User>>(`/signup`, formData);
     return response.data;
   } catch (error: any) {
@@ -27,7 +26,6 @@ export const signup = createAsyncThunk<ApiResponse<User>, {formData: Auth}>('use
 
 export const signin = createAsyncThunk<ApiResponse<User>, {formData: Signin}>('user/signin', async ({formData}, {rejectWithValue}) => {
   try {
-    await api_initial.get("/sanctum/csrf-cookie");
     const response = await api.post<ApiResponse<User>>(`/signin`, formData);
     return response.data;
   } catch (error: any) {
@@ -53,10 +51,16 @@ export const fetchUser = createAsyncThunk<ApiResponse<User> | null, void>(
 );
 
 export const createGuestUser = createAsyncThunk<ApiResponse<number>, void>(
-  'user/createGuestUser', async () => {
-  const response = await api.post<ApiResponse<number>>(`/guest-user`);
-  return response.data;
-});
+  'user/createGuestUser', async (_, {rejectWithValue}) => {
+    try {
+      await api_initial.get("/sanctum/csrf-cookie");
+      const response = await api.post<ApiResponse<number>>(`/guest-user`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(null);
+    }
+  }
+);
 
 export const updateUser = createAsyncThunk<ApiResponse<User>, {id: number, formData: UpdateUserState}>(
   'user/updateUser', async ({id, formData}) => {
@@ -96,7 +100,7 @@ export const switchDefaultAddress = createAsyncThunk<ApiResponse<Address>, {id: 
 
 export const updatePassword = createAsyncThunk<void, {id: number, current_password: string, new_password: string}>(
   'user/updatePassword', async ({id, current_password, new_password}) => {
-  const response = await api.put<void>(`/user/password/${id}`, {current_password, new_password});
+  const response = await api.put<void>(`/password/${id}`, {current_password, new_password});
   return response.data;
 });
 

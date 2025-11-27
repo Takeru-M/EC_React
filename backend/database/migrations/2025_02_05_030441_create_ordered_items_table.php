@@ -13,20 +13,20 @@ return new class extends Migration
     {
         Schema::create('ordered_items', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('order_id');
+            $table->unsignedBigInteger('product_id');
+            $table->string('name');
             $table->integer('price');
             $table->integer('quantity');
-            $table->integer('status');
             $table->timestamps();
-
-            $table->foreign('product_id')
-                ->references('id')
-                ->on('products');
 
             $table->foreign('order_id')
                 ->references('id')
                 ->on('orders');
+
+            $table->foreign('product_id')
+                ->references('id')
+                ->on('products');
         });
     }
 
